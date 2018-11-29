@@ -29,9 +29,11 @@ typedef struct {
 
 typedef struct {
 	uint16_t tileID;
+	/*
 	bool isAnimated = false;
 	int frameCount = 1;
 	int aniSpeed = 0;
+	*/
 } Tile; // Aka "Chip"
 
 typedef struct {
