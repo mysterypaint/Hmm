@@ -1,5 +1,6 @@
 #pragma once
 #include "3ds/Graphics.hpp"
+#include <vector>
 
 using namespace std;
 
@@ -29,16 +30,12 @@ typedef struct {
 
 typedef struct {
 	uint16_t tileID;
-	/*
-	bool isAnimated = false;
-	int frameCount = 1;
-	int aniSpeed = 0;
-	*/
-} Tile; // Aka "Chip"
+	float aniIndex = 0;
+} Tile;
 
 typedef struct {
-	Tile tileData[704];
-	int roomGroupID = {0};
+	Tile tileData[704]; // Animated tile data is stored in the Area class, defined below
+	int roomGroupID;
 	RoomDestination mapUp;
 	RoomDestination mapRight;
 	RoomDestination mapDown;
@@ -46,7 +43,13 @@ typedef struct {
 } Room;
 
 typedef struct {
+	float waitFrames = 0;
+	vector<int> aniTiles;
+} TileAnimation;
+
+typedef struct {
 	Room room[4][5];
+	TileAnimation tileAnimationList[40]; // Keeps track of every single tile animation within an Area (40 max per area, because it's the entire bottom row per area tileset)
 } Area;
 
 enum MapFile{MAP00, MAP01, MAP02, MAP03,
@@ -61,7 +64,6 @@ enum MapFile{MAP00, MAP01, MAP02, MAP03,
 			BOSS00, BOSS01, BOSS02, BOSS03,
 			BOSS04, BOSS05, BOSS06, BOSS07,
 			BOSS08, MAP_MAX};
-
 
 // Define a world of areas, which have rooms in them. We will create <num of maps> areas, and have a parallel array of textures to refer to for each map (so we load the correct graphics for the map data)
 typedef struct {

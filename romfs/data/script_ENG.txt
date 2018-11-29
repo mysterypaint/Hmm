@@ -936,7 +936,8 @@ What¤ you change your mind?
 This is the MSX shop! Please buy something!
 </TALK>
 <TALK>
-   " #
+
+ d"#
 </TALK>
 <TALK>
 That's Game Master¡

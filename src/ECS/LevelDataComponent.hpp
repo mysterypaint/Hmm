@@ -19,8 +19,8 @@ private:
 	int currXMLMapY = 0;	// Aka this source's "RoomY"
 	InputListener input;
 public:
-	World world = {0};
-	Area currMap = {0};
+	World world;
+	Area currMap;
 	int currArea = MAP00;		// The actual game's currently loaded map (Aka "FIELD" in the XML data)
 	int currRoomX = 0;			// The actual game's current room X coordinate
 	int currRoomY = 0;			// The actual game's current room Y coordinate
@@ -74,6 +74,7 @@ public:
 		s_controlCommandArray["RIGHT"] = CC_RIGHT;
 		s_controlCommandArray["DOWN"] = CC_DOWN;
 		s_controlCommandArray["HIT"] = CC_HIT;
+		s_controlCommandArray["ANIME"] = CC_ANIME;
 
 		// Before loading the actual content, initialize the texID[] array.
 		for (int i = MAP00; i < MAP_MAX; i++)
@@ -259,6 +260,12 @@ public:
 				world.area[currXMLField].room[currXMLMapX][currXMLMapY].mapRight.area = args[1];
 				world.area[currXMLField].room[currXMLMapX][currXMLMapY].mapRight.x = args[2];
 				world.area[currXMLField].room[currXMLMapX][currXMLMapY].mapRight.y = args[3];
+				break;
+			case CC_ANIME:
+				world.area[currXMLField].tileAnimationList[args[0]].waitFrames = args[1];
+				for (int i = 2; i < argCount; i++) {
+					world.area[currXMLField].tileAnimationList[args[0]].aniTiles.push_back(args[i]);
+				}
 				break;
 		}
 

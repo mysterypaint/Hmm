@@ -24,6 +24,7 @@ void InputListener::PHL_ScanInput() {
 	updateKey(&btnFaceRight, kDown & KEY_A);
 	updateKey(&btnFaceDown, kDown & KEY_B);
 	updateKey(&btnFaceLeft, kDown & KEY_Y);
+	updateKey(&btnFaceUp, kDown & KEY_X);
 	
 	updateKey(&btnL, kDown & KEY_L);
 	updateKey(&btnR, kDown & KEY_R);

@@ -8,6 +8,7 @@ class InputController : public Component {
 public:
 	TransformComponent *transform;
 	InputListener input;
+	float t = 4.0f;
 	int moveRoomX = 0;
 	int moveRoomY = 0;
 
@@ -30,9 +31,9 @@ public:
 		moveRoomX += -input.btnLeft.pressed + input.btnRight.pressed;
 		moveRoomY += -input.btnUp.pressed + input.btnDown.pressed;
 
-		/*
-		if (input.btnFaceDown.pressed == 1)
-			PHL_GameQuit();
-			*/
+		if (input.btnFaceLeft.pressed == 1)
+			t -= 0.1f;
+		else if (input.btnFaceUp.pressed == 1)
+			t += 0.1f;
 	}
 };

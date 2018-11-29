@@ -7,6 +7,7 @@
 #include "ECS/Components.hpp"
 #include "Vector2D.hpp"
 #include "Collision.hpp"
+#include <math.h>
 //#include "AssetManager.hpp"
 
 ////// Global objects //////
@@ -31,6 +32,8 @@ PHL_Surface textures[T_MAX] = {0};
 
 int language = ENG;
 int texID = sprMapG00;
+int aniTest[4] = {295, 292, 293, 294};
+const float _tAniSpdMult = 4.0f; // Tile Animation Speed Multiplier
 
 Game::Game(void) {
 	Startup();
@@ -206,6 +209,7 @@ void Game::Draw() {
 		}
 	}
 
+/*
 	printf("                      \033[0;0H");
 	printf("Map: ");
 	if (levelData.GetComponent<LevelData>().currArea < 10)
@@ -214,6 +218,7 @@ void Game::Draw() {
 	if (levelData.GetComponent<LevelData>().currArea >= BOSS00)
 		printf(" (Boss Room)");
 
+*/
 
 	// Get the current room coordinates we're playing in
 
@@ -272,23 +277,23 @@ void Game::Draw() {
 		}
 	}
 
+	Area* _thisArea = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea];
+	Room* _thisRoom = &_thisArea->room[currRoomX % 4][(currRoomY + 5) % 5];
+	int roomID = _thisRoom->roomGroupID;
+	int l1 = _thisRoom->mapLeft.area;
+	int l2 = _thisRoom->mapLeft.x;
+	int l3 = _thisRoom->mapLeft.y;
+	int r1 = _thisRoom->mapRight.area;
+	int r2 = _thisRoom->mapRight.x;
+	int r3 = _thisRoom->mapRight.y;
+	int u1 = _thisRoom->mapUp.area;
+	int u2 = _thisRoom->mapUp.x;
+	int u3 = _thisRoom->mapUp.y;
+	int d1 = _thisRoom->mapDown.area;
+	int d2 = _thisRoom->mapDown.x;
+	int d3 = _thisRoom->mapDown.y;
 
-
-	int roomID = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].roomGroupID;
-	int l1 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapLeft.area;
-	int l2 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapLeft.x;
-	int l3 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapLeft.y;
-	int r1 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapRight.area;
-	int r2 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapRight.x;
-	int r3 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapRight.y;
-	int u1 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapUp.area;
-	int u2 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapUp.x;
-	int u3 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapUp.y;
-	int d1 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapDown.area;
-	int d2 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapDown.x;
-	int d3 = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][(currRoomY + 5) % 5].mapDown.y;
-
-	printf("\nRoom: (%d, %d)\nRoom Group ID: %d                     \ntexID: %d                     \nUp %d,%d,%d   \nRight %d,%d,%d   \nDown %d,%d,%d   \nLeft: %d,%d,%d   \nUDLR - Move around the map\nA - Go forward a map\nB - Go back a map\033[0;0H", currRoomX % 4, currRoomY % 5, roomID, texID - 4, u1,u2,u3, r1,r2,r3, d1,d2,d3, l1,l2,l3);
+	//printf("\nanitest: %d\nRoom: (%d, %d)\nRoom Group ID: %d                     \ntexID: %d                     \nUp %d,%d,%d   \nRight %d,%d,%d   \nDown %d,%d,%d   \nLeft: %d,%d,%d   \nUDLR - Move around the map\nA - Go forward a map\nB - Go back a map\033[0;0H", aniTest[0], currRoomX % 4, currRoomY % 5, roomID, texID - 4, u1,u2,u3, r1,r2,r3, d1,d2,d3, l1,l2,l3);
 
 
 /*
@@ -301,13 +306,41 @@ void Game::Draw() {
 		}
 	}
 */
+	
 
-	for (int _y = 0; _y < 22; _y++) {
+	// Loop through every single Room[_x][_y] tile to draw every single tile in a given room
+	for (int _y = 0; _y < 22; _y++) { 
 		for (int _x = 0; _x < 32; _x++) {
-			int _thisTile = levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][currRoomY % 5].tileData[(_y * 32) + _x].tileID;
-			PHL_DrawSurfacePart((_x * 8) + 32, (_y * 8) + 32,
-								(_thisTile % 40) * 8, (_thisTile/40) * 8,
-								8, 8, textures[T_ATEX]);
+			Tile* _thisTile = &_thisRoom->tileData[(_y * 32) + _x];
+			int _thisTileIndex = _thisTile->tileID;
+
+			if (_thisTileIndex >= 1160) { // Determine if the tile is animated or not. The last row of tiles are always animated
+
+				// Determine how long each frame should be in the animation
+				float _aniWait = _thisArea->tileAnimationList[_thisTile->tileID-1160].waitFrames;
+
+				// Determine how many frames the animation is. Account for the first frame (+1), which is the base tile we're working with
+				int _aniMax = _thisArea->tileAnimationList[_thisTile->tileID-1160].aniTiles.size() + 1;
+
+				// Increment the animation frame if we've waited long enough
+				if (tick % (int)(_aniWait * _tAniSpdMult) == 0) // Increment the animation frame every <wait> * <tile animation speed multiplier> ticks
+					_thisTile->aniIndex++;
+				
+				// Ensure that the current tile never goes over the maximum animation value
+				_thisTile->aniIndex = fmod(_thisTile->aniIndex, _aniMax);
+				int _thisAniIndex = floor(_thisTile->aniIndex);
+
+				vector<int>* _aniTiles = &_thisArea->tileAnimationList[_thisTile->tileID-1160].aniTiles; // Get the current tile's tile animation list
+
+				if (_thisAniIndex < 1) {
+					PHL_DrawSurfacePart((_x * 8) + 32, (_y * 8) + 32, (_thisTileIndex % 40) * 8, (_thisTileIndex/40) * 8, 8, 8, textures[T_ATEX]); // Draw the first frame normally
+					//printf("%d\n", _thisTileIndex);
+				} else {
+					PHL_DrawSurfacePart((_x * 8) + 32, (_y * 8) + 32, (_aniTiles->at(_thisAniIndex - 1) % 40) * 8, (_aniTiles->at(_thisAniIndex - 1)/40) * 8, 8, 8, textures[T_ATEX]); // For all the other frames, load the index dynamically
+				}
+			} else {
+				PHL_DrawSurfacePart((_x * 8) + 32, (_y * 8) + 32, (_thisTileIndex % 40) * 8, (_thisTileIndex/40) * 8, 8, 8, textures[T_ATEX]);
+			}
 		}
 	}
 
