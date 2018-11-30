@@ -61,7 +61,7 @@ void Game::Startup(void) {
 		mkdir("/data", 0777);
 	#endif
 
-	test.AddComponent<TestComponent>(34509348590);
+	test.AddComponent<TestComponent>(3450934859);
 	test.AddComponent<TestComponent2>(8);
 	//test2.AddComponent<TestComponent>(4);
 }

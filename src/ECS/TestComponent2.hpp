@@ -7,7 +7,6 @@ class TestComponent2 : public Component {
 public:
 	int tag;
 	TestComponent* test1;
-
 	TestComponent2(int _t) {
 		tag = _t;
 	}
