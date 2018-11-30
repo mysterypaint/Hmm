@@ -3,14 +3,14 @@
 //#include "../PHL.hpp"
 #include "Components.hpp"
 
-class ColliderComponent : public Component {
+class EntityColliderComponent : public Component {
 public:
 	PHL_Rect collider;
-	std::string tag;
+	int tag;
 
 	TransformComponent* transform;
 
-	ColliderComponent(std::string _t) {
+	EntityColliderComponent(int _t) {
 		tag = _t;
 	}
 

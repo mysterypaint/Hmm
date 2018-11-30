@@ -69,6 +69,7 @@ enum MapFile{MAP00, MAP01, MAP02, MAP03,
 typedef struct {
 	Area area[MAP_MAX];
 	int texID[MAP_MAX];
+	Area* areaPtr;
 } World;
 
 enum Language {ENG, JPN, LNG_MAX};
@@ -89,3 +90,7 @@ enum GFX {sprTitle, sprProt1, sprPlayer, sprTile0,
 	sprMapG31, sprMapG32,
 	GFX_MAX};
 enum SFX { SE00, SE01, SE_MAX};
+
+enum Objects {objPlayer, objLevelData, OBJ_MAX};
+
+enum TileTypes {TL_BLANK, TL_SOLID, TL_WATER, TL_MAX};

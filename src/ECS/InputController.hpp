@@ -28,8 +28,8 @@ public:
 		transform->velocity.x = -input.btnLeft.held + input.btnRight.held;
 		transform->velocity.y = -input.btnUp.held + input.btnDown.held;
 
-		moveRoomX += -input.btnLeft.pressed + input.btnRight.pressed;
-		moveRoomY += -input.btnUp.pressed + input.btnDown.pressed;
+		moveRoomX += 0;//-input.btnLeft.pressed + input.btnRight.pressed;
+		moveRoomY += 0;//-input.btnUp.pressed + input.btnDown.pressed;
 
 		if (input.btnFaceLeft.pressed == 1)
 			t -= 0.1f;

@@ -1,0 +1,4 @@
+0: blank
+1: solid
+
+3: water

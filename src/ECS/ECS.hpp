@@ -62,7 +62,7 @@ public:
 		for(auto& c : components)
 			c->Draw();
 	}
-	bool isActive() const {
+	bool IsActive() const {
 		return active;
 	}
 	void Destroy() {
@@ -111,13 +111,13 @@ public:
 	void Refresh() {
 		entities.erase(std::remove_if(std::begin(entities), std::end(entities),
 			[](const std::unique_ptr<Entity> &mEntity) {
-				return !mEntity->isActive();
+				return !mEntity->IsActive();
 			}),
 		std::end(entities));
 	}
 
 	// Add the entity to the world using the manager class
-	Entity& addEntity() {
+	Entity& AddEntity() {
 		Entity* e = new Entity();
 		std::unique_ptr<Entity> uPtr{ e };
 		entities.emplace_back(std::move(uPtr));

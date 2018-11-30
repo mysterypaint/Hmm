@@ -21,9 +21,9 @@ private:
 public:
 	World world;
 	Area currMap;
-	int currArea = MAP00;		// The actual game's currently loaded map (Aka "FIELD" in the XML data)
-	int currRoomX = 0;			// The actual game's current room X coordinate
-	int currRoomY = 0;			// The actual game's current room Y coordinate
+	int currArea = MAP01;		// The actual game's currently loaded map (Aka "FIELD" in the XML data)
+	int currRoomX = 3;			// The actual game's current room X coordinate
+	int currRoomY = 1;			// The actual game's current room Y coordinate
 	std::map<std::string, XMLControlCommands> s_controlCommandArray;
 	List animatedTilesList;
 
@@ -51,6 +51,9 @@ public:
 		InitLevelData();
 		ParseXMLData(language);	// Based on the global game's language (EN, JP) we'll grab the dialogue/map data respective to that language
 		DefineTileGFXArrays();
+		world.areaPtr = &world.area[1];
+		printf("LevelData: %x\n", &world);
+		printf("LevelData AreaPTR: %x\n", world.areaPtr);
 	}
 
 	void Step() override {
@@ -61,6 +64,9 @@ public:
 		
 	}
 
+	World* GetWorld() {
+		return &world;
+	}
 
 	//enum XMLControlCommands {CC_FIELD, CC_WORLD, CC_CHIPLINE, CC_HIT, CC_ANIME, CC_OBJECT, CC_START, CC_LEFT, CC_RIGHT, CC_UP, CC_DOWN, CC_MAP, CC_MAX};
 	void ParseXMLData(int _language) {
