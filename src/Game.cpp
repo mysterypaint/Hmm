@@ -75,15 +75,15 @@ void Game::Startup(void) {
 
 	levelData.AddComponent<LevelData>(language);
 	World* worldPtr = levelData.GetComponent<LevelData>().GetWorld();
-	player.AddComponent<TileColliderComponent>(objPlayer, worldPtr);
 	player.AddComponent<InputController>();
 	player.AddComponent<ResourceComponent>(&textures[0], T_MAX, &sounds[0], SE_MAX, &currBGM[0], 1);
 	player.AddComponent<TimeComponent>(&tick, &deltaTime, &gamePaused);
 	player.AddComponent<TransformComponent>(116, 0);
-	player.AddComponent<SpriteComponent>(textures[T_PROTAG]);
+	player.AddComponent<SpriteComponent>(&textures[T_PROTAG]);
 	player.AddComponent<EntityColliderComponent>(objPlayer);
+	player.AddComponent<TileColliderComponent>(objPlayer, worldPtr);
 	player.AddComponent<PlayerComponent>();
-	
+	player.AddComponent<PlayerDebugComponent>();
 	//wall.AddComponent<TransformComponent>(370.0f, 377.0f, 8, 8, 1);
 	//wall.AddComponent<SpriteComponent>(textures[T_PROTAG]);
 	//wall.AddComponent<ColliderComponent>("wall");

@@ -9,3 +9,4 @@
 #include "TileColliderComponent.hpp"
 #include "LevelDataComponent.hpp"
 #include "PlayerComponent.hpp"
+#include "PlayerDebugComponent.hpp"

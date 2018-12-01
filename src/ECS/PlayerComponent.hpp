@@ -39,6 +39,8 @@ private:
 
 	// Player Physics
 	int state = P_IDLE;
+	float hsp = 0;
+	float vsp = 0;
 
 public:
 	PHL_Rect collider;
@@ -61,17 +63,14 @@ public:
 		else
 			move_speed = 0.8;
 */
-
 	}
 
 	void Step() override {
 		PlayerMovementCode();
 		
 		int _thisTile = tCollider->GetTile(*x, *y);
-
-		if (*deltaTime == 1)
-			printf("Ticks: %d\n", *ticks);
-		//printf("Player on tile: %d\n", _thisTile);
+		consoleClear();
+		printf("deltaTime: %f\nPlayer: (%f, %f)\nPlayer on Tile: %d\033[0;0H", *deltaTime, *x, *y, _thisTile);
 	}
 
 	void PlayerMovementCode() {
@@ -88,5 +87,8 @@ public:
 			case P_WHIPPING:
 				break;
 		}
+
+		*x += hsp;
+		*y += vsp;
 	}
 };

@@ -11,13 +11,17 @@ private:
 
 public:
 	SpriteComponent() = default;
-	SpriteComponent(PHL_Surface _texGroup) {
+	SpriteComponent(PHL_Surface* _texGroup) {
 		sTex.cropX = 0;
 		sTex.cropY = 0;
 		sTex.w = 16;
 		sTex.h = 16;
-		sTex.xOffset = 8;
-		sTex.yOffset = 16;
+		sTex.originX = 8;
+		sTex.originY = 15;
+		sTex.bboxLeft = -sTex.originX;
+		sTex.bboxRight = sTex.w - sTex.originX;
+		sTex.bboxTop = -sTex.originY;
+		sTex.bboxBottom = sTex.h - sTex.originY;
 		sTex.texGroup = _texGroup;
 	}
 
@@ -25,9 +29,9 @@ public:
 		//PHL_FreeSurface(tex);
 	}
 
-	void SetTex(int _id)
+	void SetTex(PHL_Surface* _newTex)
 	{
-		sTex.texGroup = PHL_LoadTexture(_id);
+		sTex.texGroup = _newTex;
 	}
 
 	void Create() override {
@@ -49,6 +53,6 @@ public:
 	}
 
 	void Draw() override {
-		PHL_DrawSurfacePart(srcRect.x - sTex.xOffset, srcRect.y - sTex.yOffset, sTex.cropX, sTex.cropY, sTex.w, sTex.h, sTex.texGroup);
+		PHL_DrawSurfacePart(srcRect.x - sTex.originX, srcRect.y - sTex.originY, sTex.cropX, sTex.cropY, sTex.w, sTex.h, *sTex.texGroup);
 	}
 };
