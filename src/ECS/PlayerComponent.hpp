@@ -22,6 +22,9 @@ private:
 	TimeComponent* time;
 	TransformComponent* transform;
 	TileColliderComponent* tCollider;
+	SpriteTexture* sTex;
+	int sprOriginX, sprOriginY;
+
 	int* ticks;
 	float* deltaTime;
 	bool* gamePaused;
@@ -36,11 +39,17 @@ private:
 	int screenOffsetY = 32;
 	float* x;
 	float* y;
+	float bboxLeft;
+	float bboxRight;
+	float bboxTop;
+	float bboxBottom;
 
 	// Player Physics
 	int state = P_IDLE;
 	float hsp = 0;
 	float vsp = 0;
+	int facingX = DIR_RIGHT;
+	int facingY = DIR_DOWN;
 
 public:
 	PHL_Rect collider;
@@ -50,6 +59,9 @@ public:
 		tCollider = &entity->GetComponent<TileColliderComponent>();
 		input = &entity->GetComponent<InputController>().input;
 		time = &entity->GetComponent<TimeComponent>();
+		sTex = &entity->GetComponent<SpriteComponent>().sTex;
+		sprOriginX = sTex->originX;
+		sprOriginY = sTex->originY;
 
 		ticks = time->ticks;
 		deltaTime = time->deltaTime;
@@ -66,14 +78,38 @@ public:
 	}
 
 	void Step() override {
+		bboxLeft = *x - sTex->originX;
+		bboxRight = *x + sTex->w - sTex->originX;
+		bboxTop = *y - sTex->originY;
+		bboxBottom = *y + sTex->h - sTex->originY;
+
 		PlayerMovementCode();
-		
-		int _thisTile = tCollider->GetTile(*x, *y);
-		consoleClear();
-		printf("deltaTime: %f\nPlayer: (%f, %f)\nPlayer on Tile: %d\033[0;0H", *deltaTime, *x, *y, _thisTile);
+		//printf("deltaTime: %f       \nPlayer: (%f, %f)              \nPlayer on Tile: %d               \nOrigin: (%d, %d)\033[0;0H", *deltaTime, *x, *y, _thisTile, sprOriginX, sprOriginY);
 	}
 
+	/*
+	Decompose movement into X and Y axes, step one at a time. If you’re planning on implementing slopes afterwards, step X first, then Y. Otherwise, the order shouldn’t matter much. Then, for each axis:
+    
+	    *Get the coordinate of the forward-facing edge, e.g. : If walking left, the x coordinate of left of bounding box. If walking right, x coordinate of right side. If up, y coordinate of top, etc.
+	    
+	    Figure which lines of tiles the bounding box intersects with – this will give you a minimum and maximum tile value on the OPPOSITE axis. For example, if we’re walking left, perhaps
+	    the player intersects with horizontal rows 32, 33 and 34 (that is, tiles with y = 32 * TS, y = 33 * TS, and y = 34 * TS, where TS = tile size).
+	    
+	    Scan along those lines of tiles and towards the direction of movement until you find the closest static obstacle.
+	    Then loop through every moving obstacle, and determine which is the closest obstacle that is actually on your path.
+	    
+	    The total movement of the player along that direction is then the minimum between the distance to closest obstacle, and the amount that you wanted to move in the first place.
+	    
+	    Move player to the new position. With this new position, step the other coordinate, if still not done.
+	*/
+
 	void PlayerMovementCode() {
+		//facingX
+		hsp = 3 * (-input->btnLeft.held + input->btnRight.held);
+
+		int _thisTile = tCollider->GetTile(*x, *y);
+		printf("Position: (%f, %f)\n\nbboxLeft: %f\nbboxRight: %f\nbboxTop: %f\nbboxBottom: %f\033[0;0H", *x, *y, bboxLeft, bboxRight, bboxTop, bboxBottom);
+
 		switch(state) {
 			default:
 			case P_IDLE:

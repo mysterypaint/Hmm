@@ -17,7 +17,7 @@ typedef struct {
 } ObjectSpawnData;
 
 typedef struct {
-	int cropX, cropY, w, h, originX, originY, bboxLeft, bboxRight, bboxTop, bboxBottom;
+	int cropX, cropY, w, h, originX, originY;
 	PHL_Surface* texGroup;
 } SpriteTexture;
 

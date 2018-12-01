@@ -6,10 +6,10 @@
 class SpriteComponent : public Component {
 private:
 	TransformComponent *transform;
-	SpriteTexture sTex;
 	PHL_Rect srcRect, destRect;
 
 public:
+	SpriteTexture sTex;
 	SpriteComponent() = default;
 	SpriteComponent(PHL_Surface* _texGroup) {
 		sTex.cropX = 0;
@@ -18,10 +18,6 @@ public:
 		sTex.h = 16;
 		sTex.originX = 8;
 		sTex.originY = 15;
-		sTex.bboxLeft = -sTex.originX;
-		sTex.bboxRight = sTex.w - sTex.originX;
-		sTex.bboxTop = -sTex.originY;
-		sTex.bboxBottom = sTex.h - sTex.originY;
 		sTex.texGroup = _texGroup;
 	}
 
