@@ -35,3 +35,9 @@
 *.smdh
 *.elf
 *.bat
+
+# Other
+*.bnr
+*.map
+*.lst
+*.icn
