@@ -4,7 +4,10 @@
 
 class ResourceComponent : public Component {
 public:
-	World* worldPtr;
+	PHL_Surface* textures;
+	PHL_Sound* sounds;
+	PHL_Music* currBGM;
+
 	int roomWidth = 32;
 	int roomHeight = 22;
 	int tileWidth = 8;
@@ -12,17 +15,10 @@ public:
 	int screenOffsetX = 32;
 	int screenOffsetY = 32;
 
-	ResourceComponent() = default;
-
-	ResourceComponent(World* _worldPtr) {
-		World* worldPtr = _worldPtr;
-		printf("Player entity (Resource): %x\n", &entity);
-		printf("ResourceComponent arg0: %x\n", _worldPtr);
-		printf("ResourceComponent: %x\n", worldPtr);
-	}
-
-	World* GetWorld() {
-		return worldPtr;
+	ResourceComponent(PHL_Surface* _textures, int texArraySize, PHL_Sound* _sounds, int soundsArraySize, PHL_Music* _currBGM, int bgmArraySize) {
+		textures = _textures;
+		sounds = _sounds;
+		currBGM = _currBGM;
 	}
 
 	void Create() override {

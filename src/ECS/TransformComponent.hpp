@@ -38,7 +38,6 @@ public:
 	}
 
 	void Create() override {
-		position.Zero();
 	}
 	
 	void Step() override {

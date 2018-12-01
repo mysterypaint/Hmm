@@ -12,10 +12,12 @@ private:
 public:
 	SpriteComponent() = default;
 	SpriteComponent(PHL_Surface _texGroup) {
-		sTex.cropx = 0;
-		sTex.cropy = 0;
+		sTex.cropX = 0;
+		sTex.cropY = 0;
 		sTex.w = 16;
 		sTex.h = 16;
+		sTex.xOffset = 8;
+		sTex.yOffset = 16;
 		sTex.texGroup = _texGroup;
 	}
 
@@ -47,6 +49,6 @@ public:
 	}
 
 	void Draw() override {
-		PHL_DrawSurfacePart(srcRect.x, srcRect.y, sTex.cropx, sTex.cropy, sTex.w, sTex.h, sTex.texGroup);
+		PHL_DrawSurfacePart(srcRect.x - sTex.xOffset, srcRect.y - sTex.yOffset, sTex.cropX, sTex.cropY, sTex.w, sTex.h, sTex.texGroup);
 	}
 };

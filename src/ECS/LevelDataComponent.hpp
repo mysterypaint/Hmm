@@ -17,7 +17,6 @@ private:
 	int currXMLField = MAP00;	// Aka this source's "Area"
 	int currXMLMapX = 0;	// Aka this source's "RoomX"
 	int currXMLMapY = 0;	// Aka this source's "RoomY"
-	InputListener input;
 public:
 	World world;
 	Area currMap;
@@ -51,9 +50,6 @@ public:
 		InitLevelData();
 		ParseXMLData(language);	// Based on the global game's language (EN, JP) we'll grab the dialogue/map data respective to that language
 		DefineTileGFXArrays();
-		world.areaPtr = &world.area[1];
-		printf("LevelData: %x\n", &world);
-		printf("LevelData AreaPTR: %x\n", world.areaPtr);
 	}
 
 	void Step() override {

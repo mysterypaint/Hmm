@@ -19,12 +19,12 @@ auto& levelData(manager.AddEntity());
 
 ////// Global vars //////
 int tick = 0;
-double deltaTime = 1.0f;
+float deltaTime = 1.0f;
 int screenShakeTimer = 0;
 bool gamePaused = false;
 bool loopBGM = true;
 
-PHL_Music currSong;					// Keeps the current song stream in the memory
+PHL_Music currBGM[1];					// Keeps the current song stream in the memory
 PHL_Sound sounds[SE_MAX];			// Creates an array that stores every sound in the game
 
 PHL_Background background, foreground;
@@ -32,7 +32,6 @@ PHL_Surface textures[T_MAX] = {0};
 
 int language = ENG;
 int texID = sprMapG00;
-int aniTest[4] = {295, 292, 293, 294};
 const float _tAniSpdMult = 4.0f; // Tile Animation Speed Multiplier
 
 Game::Game(void) {
@@ -52,6 +51,16 @@ void Game::Startup(void) {
 
 	textures[T_PROTAG] = PHL_LoadTexture(sprProt1);
 	textures[T_ATEX] = PHL_LoadTexture(sprMapG01);
+
+	PHL_FreeMusic(currBGM[0]);
+	//currBGM[0] = PHL_LoadMusic("m00", loopBGM);
+	currBGM[0] = PHL_LoadMusic(NULL, loopBGM);
+	sounds[SE00] = PHL_LoadSound("se00");
+	sounds[SE01] = PHL_LoadSound("se01");
+	PHL_PlayMusic(currBGM[0]);
+	//textures[T_ATEX] = PHL_LoadTexture(levelData.GetComponent<LevelData>().world.texID[MAP00]);
+	//player.GetComponent<LevelData>().LoadMap(0, textures[T_ATEX]);
+
 	//Force create save data folders
 	#ifdef _3DS
 		//3DS builds
@@ -66,13 +75,15 @@ void Game::Startup(void) {
 
 	levelData.AddComponent<LevelData>(language);
 	World* worldPtr = levelData.GetComponent<LevelData>().GetWorld();
-	printf("Game: %x\n", worldPtr);
-	player.AddComponent<TransformComponent>(10);
-	player.AddComponent<SpriteComponent>(textures[T_PROTAG]);
-	player.AddComponent<InputController>();
-	player.AddComponent<ResourceComponent>(worldPtr);
-	player.AddComponent<EntityColliderComponent>(objPlayer);
 	player.AddComponent<TileColliderComponent>(objPlayer, worldPtr);
+	player.AddComponent<InputController>();
+	player.AddComponent<ResourceComponent>(&textures[0], T_MAX, &sounds[0], SE_MAX, &currBGM[0], 1);
+	player.AddComponent<TimeComponent>(&tick, &deltaTime, &gamePaused);
+	player.AddComponent<TransformComponent>(116, 0);
+	player.AddComponent<SpriteComponent>(textures[T_PROTAG]);
+	player.AddComponent<EntityColliderComponent>(objPlayer);
+	player.AddComponent<PlayerComponent>();
+	
 	//wall.AddComponent<TransformComponent>(370.0f, 377.0f, 8, 8, 1);
 	//wall.AddComponent<SpriteComponent>(textures[T_PROTAG]);
 	//wall.AddComponent<ColliderComponent>("wall");
@@ -109,16 +120,6 @@ void Game::Step() {
 
 	switch(_gameState) {
 		case Game::INIT:
-
-
-			PHL_FreeMusic(currSong);
-			//currSong = PHL_LoadMusic("m00", loopBGM);
-			currSong = PHL_LoadMusic(NULL, loopBGM);
-			sounds[SE00] = PHL_LoadSound("se00");
-			sounds[SE01] = PHL_LoadSound("se01");
-			PHL_PlayMusic(currSong);
-			//textures[T_ATEX] = PHL_LoadTexture(levelData.GetComponent<LevelData>().world.texID[MAP00]);
-			//player.GetComponent<LevelData>().LoadMap(0, textures[T_ATEX]);
 			_gameState = Game::GAMEPLAY;
 			break;
 		case Game::GAMEPLAY:
@@ -126,26 +127,6 @@ void Game::Step() {
 		default:
 			break;
 	}
-
-
-	/*
-	if (input.btnStart.pressed == 1) {
-		gamePaused = !gamePaused;
-		if (gamePaused) {
-			deltaTime = 0;
-			PHL_StopMusic();
-			PHL_PlaySound(sounds[Game::SE00], 1);
-			//PHL_StopSound(sounds[se00], 1); // PHL_Sound snd, int channel
-		} else {
-			deltaTime = 1;
-			PHL_PlayMusic(currSong);
-			PHL_PlaySound(sounds[Game::SE00], 1);
-		}
-	}
-
-	if (input.btnSelect.pressed == 1)
-		PHL_GameQuit();
-	*/
 
 	if (GetMainLoop() == 0) {
 		// The game is ending; Free all game resources
@@ -156,7 +137,7 @@ void Game::Step() {
 		}
 		
 		//Free Music
-		PHL_FreeMusic(currSong);
+		PHL_FreeMusic(currBGM[0]);
 	}
 	tick++;
 }
@@ -165,19 +146,7 @@ void Game::Draw() {
 	PHL_StartDrawing();
 	PHL_DrawBackground(background, foreground);
 
-
-
-
-
-	//PHL_DrawSurface(0, 0, textures[T_ATEX]);
-
-	//map[i].room[0][0].tileData[0].tileID = 5;
-	//PHL_DrawSurfacePart(32, 32, 16, 0, 16, 16, textures[T_PROTAG]);
-
-
-
-//void PHL_DrawSurfacePart(int16_t x, int16_t y, int16_t cropx, int16_t cropy, int16_t cropw, int16_t croph, PHL_Surface surf) {
-	if (player.GetComponent<InputController>().input.btnFaceRight.pressed == 1) {
+	if (false) {
 		levelData.GetComponent<LevelData>().LoadMap(1, textures[T_ATEX]);
 		PHL_FreeSurface(textures[T_ATEX]);
 		texID = levelData.GetComponent<LevelData>().world.texID[levelData.GetComponent<LevelData>().currArea];
@@ -185,31 +154,31 @@ void Game::Draw() {
 
 		switch(levelData.GetComponent<LevelData>().currArea) {
 			case MAP00:
-				PHL_FreeMusic(currSong);
-				currSong = PHL_LoadMusic("m01", loopBGM);
-				PHL_PlayMusic(currSong);
+				PHL_FreeMusic(currBGM[0]);
+				currBGM[0] = PHL_LoadMusic("m01", loopBGM);
+				PHL_PlayMusic(currBGM[0]);
 				break;
 			case MAP01:
-				PHL_FreeMusic(currSong);
-				currSong = PHL_LoadMusic("m00", loopBGM);
-				PHL_PlayMusic(currSong);
+				PHL_FreeMusic(currBGM[0]);
+				currBGM[0] = PHL_LoadMusic("m00", loopBGM);
+				PHL_PlayMusic(currBGM[0]);
 				break;
 		}
-	} else if (player.GetComponent<InputController>().input.btnFaceDown.pressed == 1) {
+	} else if (false) {
 		levelData.GetComponent<LevelData>().LoadMap(-1, textures[T_ATEX]);
 		PHL_FreeSurface(textures[T_ATEX]);
 		texID = levelData.GetComponent<LevelData>().world.texID[levelData.GetComponent<LevelData>().currArea];
 		textures[T_ATEX] = PHL_LoadTexture(texID);
 		switch(levelData.GetComponent<LevelData>().currArea) {
 			case MAP00:
-				PHL_FreeMusic(currSong);
-				currSong = PHL_LoadMusic("m01", loopBGM);
-				PHL_PlayMusic(currSong);
+				PHL_FreeMusic(currBGM[0]);
+				currBGM[0] = PHL_LoadMusic("m01", loopBGM);
+				PHL_PlayMusic(currBGM[0]);
 				break;
 			case MAP01:
-				PHL_FreeMusic(currSong);
-				currSong = PHL_LoadMusic("m00", loopBGM);
-				PHL_PlayMusic(currSong);
+				PHL_FreeMusic(currBGM[0]);
+				currBGM[0] = PHL_LoadMusic("m00", loopBGM);
+				PHL_PlayMusic(currBGM[0]);
 				break;
 		}
 	}
@@ -230,56 +199,59 @@ void Game::Draw() {
 	int currRoomX = levelData.GetComponent<LevelData>().currRoomX;
 	int currRoomY = levelData.GetComponent<LevelData>().currRoomY;
 
-	// Debug room switching controls
-	int moveRoomX = player.GetComponent<InputController>().moveRoomX;
-	int moveRoomY = player.GetComponent<InputController>().moveRoomY;
-
 	// Find the current room, given the room coordinates
 	Room* currRoom = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][currRoomY % 5];
 
 	// Switch room data based on the cardinal directions we've pressed (debug)
-	if (moveRoomX == -1) { // Left
-		if (currRoom->mapLeft.x >= 0 && currRoom->mapLeft.y >= 0) {	
-			levelData.GetComponent<LevelData>().currArea = currRoom->mapLeft.area;
-			levelData.GetComponent<LevelData>().currRoomX = currRoom->mapLeft.x;
-			levelData.GetComponent<LevelData>().currRoomY = currRoom->mapLeft.y;
-			currRoomX = levelData.GetComponent<LevelData>().currRoomX;
-			currRoomY = levelData.GetComponent<LevelData>().currRoomY;
-			UpdateMapGraphics();
-			UpdateMapBGM();
-		}
-	} else if (moveRoomX == 1) { // Right
-		if (currRoom->mapRight.x >= 0 && currRoom->mapRight.y >= 0) {
-			levelData.GetComponent<LevelData>().currArea = currRoom->mapRight.area;
-			levelData.GetComponent<LevelData>().currRoomX = currRoom->mapRight.x;
-			levelData.GetComponent<LevelData>().currRoomY = currRoom->mapRight.y;
-			currRoomX = levelData.GetComponent<LevelData>().currRoomX;
-			currRoomY = levelData.GetComponent<LevelData>().currRoomY;
-			UpdateMapGraphics();
-			UpdateMapBGM();
-		}
-	}
+	int moveRoom = DIR_NONE;
 
-	if (moveRoomY == -1) { // Up
-		if (currRoom->mapUp.x >= 0 && currRoom->mapUp.y >= 0) {
-			levelData.GetComponent<LevelData>().currArea = currRoom->mapUp.area;
-			levelData.GetComponent<LevelData>().currRoomX = currRoom->mapUp.x;
-			levelData.GetComponent<LevelData>().currRoomY = currRoom->mapUp.y;
-			currRoomX = levelData.GetComponent<LevelData>().currRoomX;
-			currRoomY = levelData.GetComponent<LevelData>().currRoomY;
-			UpdateMapGraphics();
-			UpdateMapBGM();
-		}
-	} else if (moveRoomY == 1) { // Down
-		if (currRoom->mapDown.x >= 0 && currRoom->mapDown.y >= 0) {
-			levelData.GetComponent<LevelData>().currArea = currRoom->mapDown.area;
-			levelData.GetComponent<LevelData>().currRoomX = currRoom->mapDown.x;
-			levelData.GetComponent<LevelData>().currRoomY = currRoom->mapDown.y;
-			currRoomX = levelData.GetComponent<LevelData>().currRoomX;
-			currRoomY = levelData.GetComponent<LevelData>().currRoomY;
-			UpdateMapGraphics();
-			UpdateMapBGM();
-		}
+	switch(moveRoom) {
+		default:
+			break;
+		case DIR_LEFT: // Left
+			if (currRoom->mapLeft.x >= 0 && currRoom->mapLeft.y >= 0) {	
+				levelData.GetComponent<LevelData>().currArea = currRoom->mapLeft.area;
+				levelData.GetComponent<LevelData>().currRoomX = currRoom->mapLeft.x;
+				levelData.GetComponent<LevelData>().currRoomY = currRoom->mapLeft.y;
+				currRoomX = levelData.GetComponent<LevelData>().currRoomX;
+				currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+				UpdateMapGraphics();
+				UpdateMapBGM();
+			}
+			break;
+		case DIR_RIGHT: // Right
+			if (currRoom->mapRight.x >= 0 && currRoom->mapRight.y >= 0) {
+				levelData.GetComponent<LevelData>().currArea = currRoom->mapRight.area;
+				levelData.GetComponent<LevelData>().currRoomX = currRoom->mapRight.x;
+				levelData.GetComponent<LevelData>().currRoomY = currRoom->mapRight.y;
+				currRoomX = levelData.GetComponent<LevelData>().currRoomX;
+				currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+				UpdateMapGraphics();
+				UpdateMapBGM();
+			}
+			break;
+		case DIR_UP: // Up
+			if (currRoom->mapUp.x >= 0 && currRoom->mapUp.y >= 0) {
+				levelData.GetComponent<LevelData>().currArea = currRoom->mapUp.area;
+				levelData.GetComponent<LevelData>().currRoomX = currRoom->mapUp.x;
+				levelData.GetComponent<LevelData>().currRoomY = currRoom->mapUp.y;
+				currRoomX = levelData.GetComponent<LevelData>().currRoomX;
+				currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+				UpdateMapGraphics();
+				UpdateMapBGM();
+			}
+			break;
+		case DIR_DOWN: // Down
+			if (currRoom->mapDown.x >= 0 && currRoom->mapDown.y >= 0) {
+				levelData.GetComponent<LevelData>().currArea = currRoom->mapDown.area;
+				levelData.GetComponent<LevelData>().currRoomX = currRoom->mapDown.x;
+				levelData.GetComponent<LevelData>().currRoomY = currRoom->mapDown.y;
+				currRoomX = levelData.GetComponent<LevelData>().currRoomX;
+				currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+				UpdateMapGraphics();
+				UpdateMapBGM();
+			}
+			break;
 	}
 
 	Area* _thisArea = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea];
@@ -299,7 +271,7 @@ void Game::Draw() {
 	int d2 = _thisRoom->mapDown.x;
 	int d3 = _thisRoom->mapDown.y;
 
-	printf("\nanitest: %d\nRoom: (%d, %d)\nRoom Group ID: %d                     \ntexID: %d                     \nUp %d,%d,%d   \nRight %d,%d,%d   \nDown %d,%d,%d   \nLeft: %d,%d,%d   \nUDLR - Move around the map\nA - Go forward a map\nB - Go back a map\033[0;0H", aniTest[0], currRoomX % 4, currRoomY % 5, roomID, texID - 4, u1,u2,u3, r1,r2,r3, d1,d2,d3, l1,l2,l3);
+	printf("\nRoom: (%d, %d)\nRoom Group ID: %d                     \ntexID: %d                     \nUp %d,%d,%d   \nRight %d,%d,%d   \nDown %d,%d,%d   \nLeft: %d,%d,%d   \nUDLR - Move around the map\nA - Go forward a map\nB - Go back a map\033[0;0H", currRoomX % 4, currRoomY % 5, roomID, texID - 4, u1,u2,u3, r1,r2,r3, d1,d2,d3, l1,l2,l3);
 */
 
 /*
@@ -342,7 +314,6 @@ void Game::Draw() {
 
 				if (_thisAniIndex < 1) {
 					PHL_DrawSurfacePart((_x * 8) + drawXOffset, (_y * 8) + drawYOffset, (_thisTileIndex % 40) * 8, (_thisTileIndex/40) * 8, 8, 8, textures[T_ATEX]); // Draw the first frame normally
-					//printf("%d\n", _thisTileIndex);
 				} else {
 					PHL_DrawSurfacePart((_x * 8) + drawXOffset, (_y * 8) + drawYOffset, (_aniTiles->at(_thisAniIndex - 1) % 40) * 8, (_aniTiles->at(_thisAniIndex - 1)/40) * 8, 8, 8, textures[T_ATEX]); // For all the other frames, load the index dynamically
 				}
@@ -351,17 +322,6 @@ void Game::Draw() {
 			}
 		}
 	}
-
-/*
-
-	float __x = player.GetComponent<TransformComponent>().position.x;
-	float __y = player.GetComponent<TransformComponent>().position.y;
-
-	printf("X:%f\nY:%f\033[0;0H", __x, __y);
-
-*/
-	//PHL_DrawSurfacePart(32, 32, 16, 0, 16, 16, textures[T_PROTAG]); //PHL_DrawSurfacePart(int16_t x, int16_t y, int16_t cropx, int16_t cropy, int16_t cropw, int16_t croph, PHL_Surface surf) 
-
 	manager.Draw();
 	PHL_EndDrawing();
 }

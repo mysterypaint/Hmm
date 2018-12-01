@@ -17,7 +17,7 @@ typedef struct {
 } ObjectSpawnData;
 
 typedef struct {
-	int cropx, cropy, w, h;
+	int cropX, cropY, w, h, xOffset, yOffset;
 	PHL_Surface texGroup;
 } SpriteTexture;
 
@@ -69,12 +69,13 @@ enum MapFile{MAP00, MAP01, MAP02, MAP03,
 typedef struct {
 	Area area[MAP_MAX];
 	int texID[MAP_MAX];
-	Area* areaPtr;
 } World;
 
 enum Language {ENG, JPN, LNG_MAX};
 
 enum XMLControlCommands {CC_NULL, CC_TALK, CC_FIELD, CC_WORLD, CC_CHIPLINE, CC_HIT, CC_ANIME, CC_OBJECT, CC_START, CC_LEFT, CC_RIGHT, CC_UP, CC_DOWN, CC_MAP, CC_MAX};
+
+enum Direction {DIR_NONE, DIR_UP, DIR_LEFT, DIR_RIGHT, DIR_DOWN, DIR_MAX};
 
 enum TexGroups {T_BOSS, T_EVENT, T_GENEMIES1, T_GENEMIES2, T_AENEMIES, T_ATEX, T_FONT, T_ITEM, T_PROTAG, T_STDEMO1, T_MAX};
 enum GFX {sprTitle, sprProt1, sprPlayer, sprTile0,

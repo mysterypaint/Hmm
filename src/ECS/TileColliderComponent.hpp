@@ -39,23 +39,15 @@ public:
 		tileHeight = resources->tileHeight;
 		screenOffsetX = resources->screenOffsetX;
 		screenOffsetY = resources->screenOffsetY;
-		printf("TileColliderComponent: %x\n", worldPtr);
-		printf("TileColliderComponent: %x\n", worldPtr->areaPtr);
 	}
 
 	void Step() override {
-		int _x = static_cast<int>(transform->position.x);
-		int _y = static_cast<int>(transform->position.y);
-		int _tx = (int) (floor(_x / tileWidth)+roomWidth) % roomWidth;
-		int _ty = (int) (floor(_y / tileHeight)+roomHeight) % roomHeight;
+	}
 
+	int GetTile(float _x, float _y) {
+		int _tx = (int) (fmod(floor(_x / tileWidth)+roomWidth, roomWidth));
+		int _ty = (int) (fmod(floor(_y / tileHeight)+roomHeight, roomHeight));
 		int _thisTile = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(_ty * roomWidth) + _tx].tileID;
-		printf("(%d, %d): %d\n", _tx, _ty, _thisTile);
-		/*
-		collider.x = static_cast<int>(transform->position.x);
-		collider.y = static_cast<int>(transform->position.y);
-		collider.w = transform->width * transform->scale;
-		collider.h = transform->height * transform->scale;
-		*/
+		return _thisTile;
 	}
 };
