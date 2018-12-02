@@ -271,46 +271,40 @@ PHL_Surface PHL_LoadTexture(int _img_index) {
 
 void PHL_DrawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, PHL_RGB col) {
     // Everything is stored in memory at 2x size; Halve it for the 3ds port
-    x /= 2;
-    y /= 2;
-
-    //x += offset.x;
-    //y += offset.y;
-                    // 17, 24    ?
-
-    w /= 2;
-    h /= 2;
-
-    int16_t x2 = x + w;
-    int16_t y2 = y + h;
-
+    if (x < 0 || y < 0 || x+w > db.width || y+h > db.height)
+        return;
+    //Shrink values for small 3ds screen
+    //x /= 2; 
+    //y /= 2;
+    
+    x += offset.x;
+    y += offset.y;
+    
+    //w /= 2;
+    //h /= 2;
+    
+    s16 x2 = x + w;
+    s16 y2 = y + h;
+    
     //Keep drawing within screen
-
-/*
-    if (x < offset.x)
-        x = offset.x;
-
-    if (y < offset.y)
-        y = offset.y;
-
-    if (x2 > offset.x + offset.w)
-        x2 = offset.x + offset.w;
-
-    if (y2 > offset.y + offset.h)
-        y2 = offset.y + offset.h;
-*/
-
+    if (x < offset.x) { x = offset.x; }
+    if (y < offset.y) { y = offset.y; }
+    if (x2 > offset.x + offset.w) { x2 = offset.x + offset.w; }
+    if (y2 > offset.y + offset.h) { y2 = offset.y + offset.h; }
+    
     w = x2 - x;
     h = y2 - y;
-
-    uint32_t p = ((db.height - h - y) + (x * db.height)) * 3;
-
-    for (int i = 0; i < w; i++) {
-        for (int a = 0; a < h; a++) {
+    
+    u32 p = ((db.height - h - y) + (x * db.height)) * 3;
+    
+    for (int i = 0; i < w; i++)
+    {
+        for (int a = 0; a < h; a++)
+        {           
             db.pxdata[p] = col.b;
-            db.pxdata[p + 1] = col.g;
-            db.pxdata[p + 2] = col.r;
-
+            db.pxdata[p+1] = col.g;
+            db.pxdata[p+2] = col.r;
+            
             p += 3;
         }
         p += (db.height - h) * 3;
