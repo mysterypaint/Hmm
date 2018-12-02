@@ -53,8 +53,8 @@ void Game::Startup(void) {
 	textures[T_ATEX] = PHL_LoadTexture(sprMapG01);
 
 	PHL_FreeMusic(currBGM[0]);
-	//currBGM[0] = PHL_LoadMusic("m00", loopBGM);
-	currBGM[0] = PHL_LoadMusic(NULL, loopBGM);
+	currBGM[0] = PHL_LoadMusic("m00", loopBGM);
+	//currBGM[0] = PHL_LoadMusic(NULL, loopBGM);
 	sounds[SE00] = PHL_LoadSound("se00");
 	sounds[SE01] = PHL_LoadSound("se01");
 	PHL_PlayMusic(currBGM[0]);
@@ -82,7 +82,7 @@ void Game::Startup(void) {
 	player.AddComponent<SpriteComponent>(&textures[T_PROTAG]);
 	player.AddComponent<EntityColliderComponent>(objPlayer);
 	player.AddComponent<TileColliderComponent>(objPlayer, worldPtr);
-	player.AddComponent<PlayerComponent>();
+	player.AddComponent<PlayerComponent>(worldPtr);
 	player.AddComponent<PlayerDebugComponent>();
 	//wall.AddComponent<TransformComponent>(370.0f, 377.0f, 8, 8, 1);
 	//wall.AddComponent<SpriteComponent>(textures[T_PROTAG]);

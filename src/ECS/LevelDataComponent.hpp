@@ -229,6 +229,7 @@ public:
 				if (!disableCommand) {
 					currXMLField = args[0];
 					world.texID[currXMLField] = args[2] + sprMapG00;
+					world.collisionID[currXMLField] = args[2];
 					//printf("\nField: %d", currXMLField);
 				}
 				break;
@@ -295,20 +296,20 @@ public:
 		for (int _area = MAP00; _area < MAP_MAX; _area++) { // For every single map...
 
 			// ... Figure out the filename of the map we're trying to load
-			std::string _f_in = "romfs:/data/";
+			std::string fName = "romfs:/data/";
 			if (_area < BOSS00) {
-				_f_in += "map";
+				fName += "map";
 				if (_area < MAP10)
-					_f_in += "0";
-				_f_in += std::to_string(_area);
+					fName += "0";
+				fName += std::to_string(_area);
 			} else {
-				_f_in += "boss0" + std::to_string(_area - BOSS00);
+				fName += "boss0" + std::to_string(_area - BOSS00);
 			}
-			_f_in += ".dat";
+			fName += ".dat";
 
 			// Read the contents of that map
 		    FILE * f;
-		    if ((f = fopen(_f_in.c_str(), "rb"))) {
+		    if ((f = fopen(fName.c_str(), "rb"))) {
 		        uint8_t* datFile = (uint8_t*) malloc(fileSize * sizeof(uint8_t));
 		        fread(datFile, fileSize, 1, f);
 		        fclose(f);
@@ -348,6 +349,36 @@ public:
 
 		        free(datFile);
 			}
+
+			// Define the collisions
+			if (_area < 24) // The actual mapping is in World->CollisionMap. I just want to run this function 22 times (lol)
+				DefineCollisionMap(_area);
+		}
+	}
+
+	void DefineCollisionMap(int _area) {
+		int _index = _area;
+
+		string fNameC = "romfs:/collisions/mapc";
+		if (_index < 10)
+			fNameC += '0';
+		else if (_index > 21)
+			_index += 9;
+		fNameC += to_string(_index) + ".dat";
+
+	    FILE * f;
+	    if ((f = fopen(fNameC.c_str(), "rb"))) {
+			int fSize = 1200;
+			uint8_t* colFile = (uint8_t*) malloc(fSize * sizeof(uint8_t));
+	        fread(colFile, fSize, 1, f);
+	        fclose(f);
+			for (int _y = 0; _y < 30; _y++) {
+				for (int _x = 0; _x < 40; _x++) {
+					uint8_t _val = colFile[(_y * 40) + _x];
+					world.collisionMap[_area].tile[_x][_y] = _val;
+				}
+			}
+	        free(colFile);
 		}
 	}
 

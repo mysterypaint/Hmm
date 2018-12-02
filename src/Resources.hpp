@@ -65,10 +65,18 @@ enum MapFile{MAP00, MAP01, MAP02, MAP03,
 			BOSS04, BOSS05, BOSS06, BOSS07,
 			BOSS08, MAP_MAX};
 
+enum TileTypes {TL_BLANK, TL_SOLID, TL_WATER, TL_HURT, TL_LADDER_LEFT, TL_LADDER_RIGHT, TL_DAIS, TL_DOOR_LEFT, TL_DOOR_RIGHT, TL_HELL_WATERFALL, TL_MAX};
+
+typedef struct {
+	uint8_t tile[40][30];
+} CollisionMap;
+
 // Define a world of areas, which have rooms in them. We will create <num of maps> areas, and have a parallel array of textures to refer to for each map (so we load the correct graphics for the map data)
 typedef struct {
 	Area area[MAP_MAX];
 	int texID[MAP_MAX];
+	int collisionID[MAP_MAX];
+	CollisionMap collisionMap[22];
 } World;
 
 enum Language {ENG, JPN, LNG_MAX};
@@ -78,6 +86,7 @@ enum XMLControlCommands {CC_NULL, CC_TALK, CC_FIELD, CC_WORLD, CC_CHIPLINE, CC_H
 enum Direction {DIR_NONE, DIR_UP, DIR_LEFT, DIR_RIGHT, DIR_DOWN, DIR_MAX};
 
 enum TexGroups {T_BOSS, T_EVENT, T_GENEMIES1, T_GENEMIES2, T_AENEMIES, T_ATEX, T_FONT, T_ITEM, T_PROTAG, T_STDEMO1, T_MAX};
+
 enum GFX {sprTitle, sprProt1, sprPlayer, sprTile0,
 	sprMapG00, sprMapG01, sprMapG02, sprMapG03,
 	sprMapG04, sprMapG05, sprMapG06, sprMapG07,
@@ -90,8 +99,7 @@ enum GFX {sprTitle, sprProt1, sprPlayer, sprTile0,
 
 	sprMapG31, sprMapG32,
 	GFX_MAX};
+
 enum SFX { SE00, SE01, SE_MAX};
 
 enum Objects {objPlayer, objLevelData, OBJ_MAX};
-
-enum TileTypes {TL_BLANK, TL_SOLID, TL_WATER, TL_MAX};

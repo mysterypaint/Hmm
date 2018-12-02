@@ -23,6 +23,7 @@ private:
 	TransformComponent* transform;
 	TileColliderComponent* tCollider;
 	SpriteTexture* sTex;
+	World* worldPtr;
 	int sprOriginX, sprOriginY;
 
 	int* ticks;
@@ -48,11 +49,17 @@ private:
 	int state = P_IDLE;
 	float hsp = 0;
 	float vsp = 0;
+	float grav = 0.2;
+	float grav_max = 3;
 	int facingX = DIR_RIGHT;
 	int facingY = DIR_DOWN;
 
 public:
 	PHL_Rect collider;
+
+	PlayerComponent(World* _worldPtr) {
+		worldPtr = _worldPtr;
+	}
 
 	void Create() override {
 		transform = &entity->GetComponent<TransformComponent>();
@@ -105,10 +112,37 @@ public:
 
 	void PlayerMovementCode() {
 		//facingX
-		hsp = 3 * (-input->btnLeft.held + input->btnRight.held);
+		int moveX = (-input->btnLeft.held + input->btnRight.held);
+		int moveY = (-input->btnUp.held + input->btnDown.held);
+		int tSize = 8;
+		// bool TileAABB(int _x, int _y, int _w, int _h, int _tx, int _ty) {
 
-		int _thisTile = tCollider->GetTile(*x, *y);
-		printf("Position: (%f, %f)\n\nbboxLeft: %f\nbboxRight: %f\nbboxTop: %f\nbboxBottom: %f\033[0;0H", *x, *y, bboxLeft, bboxRight, bboxTop, bboxBottom);
+		int leftTile = bboxLeft / tSize;      // bounds = Rectangle of your entity
+		int topTile = (bboxTop + vsp) / tSize;
+		int rightTile = (int) ceil(bboxRight / tSize) - 1;
+		int bottomTile = (int) ceil((bboxBottom + vsp) / tSize) - 1;
+
+		if (vsp < grav_max)
+			vsp += grav;
+
+		for (int y = topTile; y <= bottomTile; ++y)
+		{
+		    for (int x = leftTile; x <= rightTile; ++x)
+		    {
+		        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(y * roomWidth) + x].tileID;
+		        int tileType = tCollider->TileType(tileID);
+		    	if (tileType == TL_SOLID) {
+		    		vsp = 0;
+		    	}
+		    }
+		}
+
+
+		//int _thisTile = tCollider->GetTile(*x, *y);
+
+		//tCollider->TileType(_thisTile)
+
+		//printf("Position: (%f, %f)\n\nbboxLeft: %f\nbboxRight: %f\nbboxTop: %f\nbboxBottom: %f\033[0;0H", *x, *y, bboxLeft, bboxRight, bboxTop, bboxBottom);
 
 		switch(state) {
 			default:
@@ -126,5 +160,9 @@ public:
 
 		*x += hsp;
 		*y += vsp;
+	}
+
+	void Collide(int axis) {
+
 	}
 };

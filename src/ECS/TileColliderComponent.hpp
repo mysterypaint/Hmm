@@ -50,4 +50,32 @@ public:
 		int _thisTile = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(_ty * roomWidth) + _tx].tileID;
 		return _thisTile;
 	}
+
+	int TileType(int _tileID) {
+		int _x = _tileID % 40;
+		int _y = _tileID / 40;
+		int _val = worldPtr->collisionMap[currArea].tile[_x][_y];
+		return _val;
+	}
+
+	bool TileAABB(int _x, int _y, int _w, int _h, int _tx, int _ty) {
+		PHL_Rect _recA, _recB;
+		_recA.x = _x;
+		_recA.y = _y;
+		_recA.w = _w;
+		_recA.h = _h;
+		_recB.x = _tx;
+		_recB.y = _ty;
+		_recB.w = 8; // All the tiles are 8x8
+		_recB.h = 8;
+
+		if (
+			_recA.x + _recA.w >= _recB.x &&
+			_recB.x + _recB.w >= _recA.x &&
+			_recA.y + _recA.h >= _recB.y &&
+			_recB.y + _recB.h >= _recA.y
+			)
+			return true; // There was a collision
+		return false; // There wasn't
+	}
 };
