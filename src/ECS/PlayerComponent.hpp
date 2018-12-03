@@ -30,7 +30,7 @@ private:
 	float* deltaTime;
 	bool* gamePaused;
 	int currArea = MAP01;
-	int currRoomX = 3;
+	int currRoomX = 0;
 	int currRoomY = 1;
 	int roomWidth = 32;
 	int roomHeight = 22;
@@ -95,21 +95,6 @@ public:
 		//printf("deltaTime: %f       \nPlayer: (%f, %f)              \nPlayer on Tile: %d               \nOrigin: (%d, %d)\033[0;0H", *deltaTime, *x, *y, _thisTile, sprOriginX, sprOriginY);
 	}
 
-	/*
-	Decompose movement into X and Y axes, step one at a time. If you’re planning on implementing slopes afterwards, step X first, then Y. Otherwise, the order shouldn’t matter much. Then, for each axis:
-    
-	    *Get the coordinate of the forward-facing edge, e.g. : If walking left, the x coordinate of left of bounding box. If walking right, x coordinate of right side. If up, y coordinate of top, etc.
-	    
-	    Figure which lines of tiles the bounding box intersects with – this will give you a minimum and maximum tile value on the OPPOSITE axis. For example, if we’re walking left, perhaps
-	    the player intersects with horizontal rows 32, 33 and 34 (that is, tiles with y = 32 * TS, y = 33 * TS, and y = 34 * TS, where TS = tile size).
-	    
-	    Scan along those lines of tiles and towards the direction of movement until you find the closest static obstacle.
-	    Then loop through every moving obstacle, and determine which is the closest obstacle that is actually on your path.
-	    
-	    The total movement of the player along that direction is then the minimum between the distance to closest obstacle, and the amount that you wanted to move in the first place.
-	    
-	    Move player to the new position. With this new position, step the other coordinate, if still not done.
-	*/
 
 	void PlayerMovementCode() {
 		//facingX
@@ -126,73 +111,117 @@ public:
 
 
 
-		// bool TileAABB(int _x, int _y, int _w, int _h, int _tx, int _ty) {
-
-		hsp = moveX * moveSpeed;
-		//hsp = moveX * moveSpeed;
-
+	/*
+		Decompose movement into X and Y axes, step one at a time. If you’re planning on implementing slopes afterwards, step X first, then Y. Otherwise, the order shouldn’t matter much. Then, for each axis:
+    
+	    *Get the coordinate of the forward-facing edge, e.g. : If walking left, the x coordinate of left of bounding box. If walking right, x coordinate of right side. If up, y coordinate of top, etc.
+	    
+	    Figure which lines of tiles the bounding box intersects with – this will give you a minimum and maximum tile value on the OPPOSITE axis. For example, if we’re walking left, perhaps
+	    the player intersects with horizontal rows 32, 33 and 34 (that is, tiles with y = 32 * TS, y = 33 * TS, and y = 34 * TS, where TS = tile size).
+	    
+	    Scan along those lines of tiles and towards the direction of movement until you find the closest static obstacle.
+	    Then loop through every moving obstacle, and determine which is the closest obstacle that is actually on your path.
+	    
+	    The total movement of the player along that direction is then the minimum between the distance to closest obstacle, and the amount that you wanted to move in the first place.
+	    
+	    Move player to the new position. With this new position, step the other coordinate, if still not done.
+	*/
+		int leftTile;
+		int topTile;
+		int rightTile;
+		int bottomTile;
+		bool done;
 /*
 
-		if (vsp < grav_max)
-			vsp += grav;
+		hsp = moveX * 8;
 
+		int leftTile = bboxLeft / tSize;      // bounds = Rectangle of your entity
+		int topTile = bboxTop / tSize;
+		int rightTile = bboxRight / tSize;
+		int bottomTile = bboxBottom / tSize;
+
+		//hsp = moveX * moveSpeed;
+		//if (vsp < grav_max)
+		//	vsp += grav;
+
+		bool done = false;
+		if (facingX == DIR_LEFT) {
+			for (int tx = leftTile; !done && tx >= leftTile - 4; tx--) {
+				for (int ty = bottomTile; ty >= topTile; ty--) {
+			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
+			        int tileType = tCollider->TileType(tileID);
+			    	if (tileType == TL_SOLID) {
+			    		float distance = bboxLeft - ((tx+1) * tSize);
+			    		hsp = -min(abs(hsp), distance);
+			    		done = true;
+			    		break;
+			    	}
+			    }
+			}
+		} else if (facingX == DIR_RIGHT) {
+			for (int tx = rightTile; !done && tx <= rightTile + 4; tx++) {
+				for (int ty = bottomTile; ty >= topTile; ty--) {
+			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
+			        int tileType = tCollider->TileType(tileID);
+			    	if (tileType == TL_SOLID) {
+			    		float distance = (tx * tSize) - bboxRight - 1;
+			    		hsp = min(hsp, distance);
+			    		done = true;
+			    		break;
+			    	}
+			    }
+			}
+		}
 
 */
 
-
-		int leftTile = (bboxLeft + hsp) / tSize;      // bounds = Rectangle of your entity
-		int topTile = bboxTop / tSize;
-		int rightTile = (int) ceil((bboxRight + hsp) / tSize) - 1;
-		int bottomTile = (int) ceil(bboxBottom / tSize) - 1;
-
-		if (moveX <= 0) {
-			for (int ty = topTile; ty <= bottomTile; ++ty) {
-			    for (int tx = leftTile; tx <= rightTile; ++tx) {
-			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
-			        int tileType = tCollider->TileType(tileID);
-			    	if (tileType == TL_SOLID) {
-			    		float distance = abs(*x - (tx * tSize));
-			    		hsp = min(hsp, distance);
-			    	}
-			    }
-			}
-		} else {
-			for (int ty = bottomTile; ty >= topTile; --ty) {
-			    for (int tx = rightTile; tx >= leftTile; --tx) {
-			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
-			        int tileType = tCollider->TileType(tileID);
-			    	if (tileType == TL_SOLID) {
-			    		float distance = abs((tx * tSize) - *x);
-			    		hsp = min(hsp, distance);
-			    	}
-			    }
-			}
-		}
-
-
-
-		leftTile = bboxLeft / tSize;      // bounds = Rectangle of your entity
-		topTile = (bboxTop + vsp) / tSize;
-		rightTile = (int) ceil(bboxRight / tSize) - 1;
-		bottomTile = (int) ceil((bboxBottom + vsp) / tSize) - 1;
-
+/*
 		if (vsp < grav_max)
 			vsp += grav;
-
-		for (int ty = topTile; ty <= bottomTile; ++ty)
-		{
-		    for (int tx = leftTile; tx <= rightTile; ++tx)
-		    {
-		        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
-		        int tileType = tCollider->TileType(tileID);
-		    	if (tileType == TL_SOLID) {
-		    		float distance = (ty * tSize) - *y;
-		    		vsp = min(vsp, abs(distance));
-		    	}
-		    }
+*/
+		if (moveY != 0) { // Are we facing down or up? (Down initially)
+			if (moveY > 0)
+				facingY = DIR_DOWN;
+			else
+				facingY = DIR_UP;
 		}
 
-		printf("%f, %f          \n\033[0;0H",hsp,vsp);
+		done = false;
+		vsp = moveY * 1;
+
+		leftTile = bboxLeft / tSize;      // bounds = Rectangle of your entity
+		topTile = bboxTop / tSize;
+		rightTile = bboxRight / tSize;
+		bottomTile = bboxBottom / tSize;
+
+		if (facingY == DIR_UP) {
+			for (int ty = topTile; !done && ty >= topTile - 1; ty--) {
+				for (int tx = leftTile; tx <= rightTile; tx++) {
+			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
+			        int tileType = tCollider->TileType(tileID);
+			    	if (tileType == TL_SOLID) {
+			    		float distance = bboxTop - (ty * tSize);
+			    		vsp = -min(abs(vsp), distance);
+			    		done = true;
+			    		break;
+			    	}
+			    }
+			}
+		} else if (facingY == DIR_DOWN) {
+			for (int ty = bottomTile; !done && ty <= bottomTile + 1; ty++) {
+				for (int tx = leftTile; tx <= rightTile; tx++) {
+			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
+			        int tileType = tCollider->TileType(tileID);
+			    	if (tileType == TL_SOLID) {
+			    		float distance = (ty * tSize) - bboxBottom;
+			    		vsp = min(vsp, distance);
+			    		done = true;
+			    		break;
+			    	}
+			    }
+			}
+		}
+		//printf("%f, %f          \n\033[0;0H",hsp,vsp);
 
 		//int _thisTile = tCollider->GetTile(*x, *y);
 
@@ -224,6 +253,7 @@ public:
 
 	void Draw() override {
 //void PHL_DrawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, PHL_RGB col) {
+/*
 		PHL_RGB color = PHL_NewRGB(255,0,0);
 		if (facingX == DIR_LEFT)
 			PHL_DrawRect(bboxLeft, *y - sTex->originY, 1, 16, color);
@@ -234,5 +264,6 @@ public:
 			PHL_DrawRect(*x - sTex->originX, bboxBottom, 16, 1, color);
 		else
 			PHL_DrawRect(*x - sTex->originX, bboxTop, 16, 1, color);
+*/
 	}
 };
