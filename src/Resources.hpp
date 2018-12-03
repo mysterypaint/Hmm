@@ -100,6 +100,6 @@ enum GFX {sprTitle, sprProt1, sprPlayer, sprTile0,
 	sprMapG31, sprMapG32,
 	GFX_MAX};
 
-enum SFX { SE00, SE01, SE_MAX};
+enum SFX { SE00, SE01, SE02, SE03, SE04, SE_MAX};
 
 enum Objects {objPlayer, objLevelData, OBJ_MAX};

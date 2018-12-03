@@ -20,7 +20,7 @@ private:
 public:
 	World world;
 	Area currMap;
-	int currArea = MAP01;		// The actual game's currently loaded map (Aka "FIELD" in the XML data)
+	int currArea = MAP03;		// The actual game's currently loaded map (Aka "FIELD" in the XML data)
 	int currRoomX = 0;			// The actual game's current room X coordinate
 	int currRoomY = 1;			// The actual game's current room Y coordinate
 	std::map<std::string, XMLControlCommands> s_controlCommandArray;

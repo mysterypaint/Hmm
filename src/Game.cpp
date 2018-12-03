@@ -31,7 +31,7 @@ PHL_Background background, foreground;
 PHL_Surface textures[T_MAX] = {0};
 
 int language = ENG;
-int texID = sprMapG00;
+int texID = sprMapG03;
 const float _tAniSpdMult = 4.0f; // Tile Animation Speed Multiplier
 
 Game::Game(void) {
@@ -50,13 +50,16 @@ void Game::Startup(void) {
 	//assets->AddTexture(T_PROTAG, sprProt1);
 
 	textures[T_PROTAG] = PHL_LoadTexture(sprProt1);
-	textures[T_ATEX] = PHL_LoadTexture(sprMapG01);
+	textures[T_ATEX] = PHL_LoadTexture(texID);
 
 	PHL_FreeMusic(currBGM[0]);
-	currBGM[0] = PHL_LoadMusic("m00", loopBGM);
+	currBGM[0] = PHL_LoadMusic("m04", loopBGM);
 	//currBGM[0] = PHL_LoadMusic(NULL, loopBGM);
 	sounds[SE00] = PHL_LoadSound("se00");
 	sounds[SE01] = PHL_LoadSound("se01");
+	sounds[SE02] = PHL_LoadSound("se02");
+	sounds[SE03] = PHL_LoadSound("se03");
+	sounds[SE04] = PHL_LoadSound("se04");
 	PHL_PlayMusic(currBGM[0]);
 	//textures[T_ATEX] = PHL_LoadTexture(levelData.GetComponent<LevelData>().world.texID[MAP00]);
 	//player.GetComponent<LevelData>().LoadMap(0, textures[T_ATEX]);

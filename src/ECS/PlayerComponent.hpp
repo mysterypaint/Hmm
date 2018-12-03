@@ -24,12 +24,14 @@ private:
 	TileColliderComponent* tCollider;
 	SpriteTexture* sTex;
 	World* worldPtr;
+	ResourceComponent* resources;
+
 	int sprOriginX, sprOriginY;
 
 	int* ticks;
 	float* deltaTime;
 	bool* gamePaused;
-	int currArea = MAP01;
+	int currArea = MAP03;
 	int currRoomX = 0;
 	int currRoomY = 1;
 	int roomWidth = 32;
@@ -47,12 +49,14 @@ private:
 
 	// Player Physics
 	int state = P_IDLE;
+	bool grounded = false;
 	bool hasBoots = false;
 	float moveSpeed = 0.6;
 	float hsp = 0;
 	float vsp = 0;
-	float grav = 0;//0.2;
+	float grav = 0.1;
 	float grav_max = 3;
+	float jumpSpeed = 3;
 	int facingX = DIR_RIGHT;
 	int facingY = DIR_DOWN;
 
@@ -68,6 +72,7 @@ public:
 		tCollider = &entity->GetComponent<TileColliderComponent>();
 		input = &entity->GetComponent<InputController>().input;
 		time = &entity->GetComponent<TimeComponent>();
+		resources = &entity->GetComponent<ResourceComponent>();
 		sTex = &entity->GetComponent<SpriteComponent>().sTex;
 		sprOriginX = sTex->originX;
 		sprOriginY = sTex->originY;
@@ -91,7 +96,8 @@ public:
 		bboxTop = *y - sTex->originY;
 		bboxBottom = *y + sTex->h - sTex->originY - 1;
 
-		PlayerMovementCode();
+		if (*deltaTime > 0)
+			PlayerMovementCode();
 		//printf("deltaTime: %f       \nPlayer: (%f, %f)              \nPlayer on Tile: %d               \nOrigin: (%d, %d)\033[0;0H", *deltaTime, *x, *y, _thisTile, sprOriginX, sprOriginY);
 	}
 
@@ -107,9 +113,8 @@ public:
 				facingX = DIR_RIGHT;
 			else
 				facingX = DIR_LEFT;
-		}
-
-
+		} else
+			facingX = DIR_NONE;
 
 	/*
 		Decompose movement into X and Y axes, step one at a time. If you’re planning on implementing slopes afterwards, step X first, then Y. Otherwise, the order shouldn’t matter much. Then, for each axis:
@@ -126,101 +131,113 @@ public:
 	    
 	    Move player to the new position. With this new position, step the other coordinate, if still not done.
 	*/
-		int leftTile;
-		int topTile;
-		int rightTile;
-		int bottomTile;
-		bool done;
-/*
+		float start;
+		float end;
+		float ts;
+		float tsF;
+		bool breakLoop = false;
 
-		hsp = moveX * 8;
+		hsp = moveX * 2;
 
-		int leftTile = bboxLeft / tSize;      // bounds = Rectangle of your entity
-		int topTile = bboxTop / tSize;
-		int rightTile = bboxRight / tSize;
-		int bottomTile = bboxBottom / tSize;
-
-		//hsp = moveX * moveSpeed;
-		//if (vsp < grav_max)
-		//	vsp += grav;
-
-		bool done = false;
 		if (facingX == DIR_LEFT) {
-			for (int tx = leftTile; !done && tx >= leftTile - 4; tx--) {
-				for (int ty = bottomTile; ty >= topTile; ty--) {
+			start = floor(bboxTop / tSize);
+			end = ceil(bboxBottom / tSize);
+			ts = floor((bboxLeft) / tSize);
+			tsF = floor(((bboxLeft) + hsp) / tSize) - 1;
+			for (int tx = ts; !breakLoop && tx != tsF; tx--) {
+				for (int ty = start; ty != end; ty++) {
 			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
 			        int tileType = tCollider->TileType(tileID);
 			    	if (tileType == TL_SOLID) {
 			    		float distance = bboxLeft - ((tx+1) * tSize);
 			    		hsp = -min(abs(hsp), distance);
-			    		done = true;
+			    		breakLoop = true;
 			    		break;
 			    	}
 			    }
 			}
 		} else if (facingX == DIR_RIGHT) {
-			for (int tx = rightTile; !done && tx <= rightTile + 4; tx++) {
-				for (int ty = bottomTile; ty >= topTile; ty--) {
+			start = floor(bboxTop / tSize);
+			end = ceil(bboxBottom / tSize);
+			ts = floor((bboxRight + 1) / tSize);
+			tsF = floor(((bboxRight + 1) + hsp) / tSize) + 1;
+			for (int tx = ts; !breakLoop && tx != tsF; tx++) {
+				for (int ty = start; ty != end; ty++) {
 			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
 			        int tileType = tCollider->TileType(tileID);
 			    	if (tileType == TL_SOLID) {
-			    		float distance = (tx * tSize) - bboxRight - 1;
-			    		hsp = min(hsp, distance);
-			    		done = true;
+			    		float distance = ((tx) * tSize) - (bboxRight + 1);
+			    		hsp = min(abs(hsp), distance);
+			    		breakLoop = true;
 			    		break;
 			    	}
 			    }
 			}
 		}
 
-*/
-
-/*
-		if (vsp < grav_max)
-			vsp += grav;
-*/
-		if (moveY != 0) { // Are we facing down or up? (Down initially)
-			if (moveY > 0)
-				facingY = DIR_DOWN;
-			else
-				facingY = DIR_UP;
+		//vsp = moveY * 2;
+		if (input->btnFaceDown.pressed && grounded) {
+			vsp = -jumpSpeed;
+			PHL_PlaySound(resources->sounds[SE03], 1);
 		}
 
-		done = false;
-		vsp = moveY * 1;
+		if (vsp < grav_max)
+			vsp += grav * *deltaTime;
 
-		leftTile = bboxLeft / tSize;      // bounds = Rectangle of your entity
-		topTile = bboxTop / tSize;
-		rightTile = bboxRight / tSize;
-		bottomTile = bboxBottom / tSize;
+		if (vsp >= 0)
+			facingY = DIR_DOWN;
+		else {
+			grounded = false;
+			facingY = DIR_UP;
+		}
 
+
+		breakLoop = false;
+		start = floor(bboxLeft / tSize);      // bounds = Rectangle of your entity
+		end = ceil(bboxRight / tSize);
+		ts = floor(bboxTop / tSize);
+		tsF = floor((bboxTop + vsp) / tSize) - 1;
+		bool onCeiling  = false;
 		if (facingY == DIR_UP) {
-			for (int ty = topTile; !done && ty >= topTile - 1; ty--) {
-				for (int tx = leftTile; tx <= rightTile; tx++) {
+			for (int ty = ts; !breakLoop && ty != tsF; ty--) {
+				for (int tx = start; tx != end; tx++) {
 			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
 			        int tileType = tCollider->TileType(tileID);
 			    	if (tileType == TL_SOLID) {
-			    		float distance = bboxTop - (ty * tSize);
+			    		float distance = bboxTop - ((ty+1) * tSize);
 			    		vsp = -min(abs(vsp), distance);
-			    		done = true;
+			    		if (distance == 0 && *deltaTime > 0) {
+			    			*y = ((ty+1) * tSize) + sTex->h;
+			    			onCeiling  = true;
+			    		}
+			    		breakLoop = true;
 			    		break;
 			    	}
 			    }
 			}
 		} else if (facingY == DIR_DOWN) {
-			for (int ty = bottomTile; !done && ty <= bottomTile + 1; ty++) {
-				for (int tx = leftTile; tx <= rightTile; tx++) {
+			start = floor(bboxLeft / tSize);
+			end = ceil(bboxRight / tSize);
+			ts = floor((bboxBottom+1) / tSize);
+			tsF = floor(((bboxBottom+1) + vsp) / tSize) + 1;
+			for (int ty = ts; !breakLoop && ty != tsF; ty++) {
+				for (int tx = start; tx != end; tx++) {
 			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
 			        int tileType = tCollider->TileType(tileID);
 			    	if (tileType == TL_SOLID) {
-			    		float distance = (ty * tSize) - bboxBottom;
-			    		vsp = min(vsp, distance);
-			    		done = true;
+			    		float distance = ((ty) * tSize) - (bboxBottom+1);
+			    		vsp = min(abs(vsp), distance);
+			    		breakLoop = true;
+			    		if (!grounded) {
+			    			PHL_PlaySound(resources->sounds[SE04], 1);
+			    		}
+						grounded = true;
 			    		break;
 			    	}
 			    }
 			}
 		}
+
 		//printf("%f, %f          \n\033[0;0H",hsp,vsp);
 
 		//int _thisTile = tCollider->GetTile(*x, *y);
@@ -243,8 +260,9 @@ public:
 				break;
 		}
 
-		*x += hsp;
-		*y += vsp;
+		*x += hsp * *deltaTime;
+		if (!onCeiling)
+			*y += vsp * *deltaTime;
 	}
 
 	void Collide(int axis) {
