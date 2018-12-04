@@ -7,11 +7,12 @@ class SpriteComponent : public Component {
 private:
 	TransformComponent *transform;
 	PHL_Rect srcRect, destRect;
+	CameraComponent* camera;
 
 public:
 	SpriteTexture sTex;
 	SpriteComponent() = default;
-	SpriteComponent(PHL_Surface* _texGroup) {
+	SpriteComponent(PHL_Surface* _texGroup, Entity* _camera) {
 		sTex.cropX = 0;
 		sTex.cropY = 0;
 		sTex.w = 16;
@@ -19,6 +20,7 @@ public:
 		sTex.originX = 8;
 		sTex.originY = 15;
 		sTex.texGroup = _texGroup;
+		camera = &_camera->GetComponent<CameraComponent>();
 	}
 
 	~SpriteComponent() {
@@ -49,6 +51,6 @@ public:
 	}
 
 	void Draw() override {
-		PHL_DrawSurfacePart(srcRect.x - sTex.originX, srcRect.y - sTex.originY, sTex.cropX, sTex.cropY, sTex.w, sTex.h, *sTex.texGroup);
+		PHL_DrawSurfacePart(srcRect.x - sTex.originX + camera->x, srcRect.y - sTex.originY + camera->y, sTex.cropX, sTex.cropY, sTex.w, sTex.h, *sTex.texGroup);
 	}
 };

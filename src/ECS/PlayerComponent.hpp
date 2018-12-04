@@ -31,40 +31,46 @@ private:
 	int* ticks;
 	float* deltaTime;
 	bool* gamePaused;
-	int currArea = MAP03;
-	int currRoomX = 0;
-	int currRoomY = 1;
-	int roomWidth = 32;
-	int roomHeight = 22;
-	int tileWidth = 8;
-	int tileHeight = 8;
-	int screenOffsetX = 32;
-	int screenOffsetY = 32;
+	int* currArea;
+	int* currRoomX;
+	int* currRoomY;
+	int* roomWidth;
+	int* roomHeight;
+	int* tileWidth;
+	int* tileHeight;
 	float* x;
 	float* y;
-	float bboxLeft;
-	float bboxRight;
-	float bboxTop;
-	float bboxBottom;
 
 	// Player Physics
 	int state = P_IDLE;
 	bool grounded = false;
 	bool hasBoots = false;
 	float moveSpeed = 0.6;
-	float hsp = 0;
-	float vsp = 0;
 	float grav = 0.1;
 	float grav_max = 3;
 	float jumpSpeed = 3;
-	int facingX = DIR_RIGHT;
-	int facingY = DIR_DOWN;
 
 public:
+	float hsp = 0;
+	float vsp = 0;
+	int facingX = DIR_RIGHT;
+	int facingY = DIR_DOWN;
+	float bboxLeft;
+	float bboxRight;
+	float bboxTop;
+	float bboxBottom;
 	PHL_Rect collider;
 
-	PlayerComponent(World* _worldPtr) {
-		worldPtr = _worldPtr;
+	PlayerComponent(Entity* _levelData) {
+		LevelData* levelData = &_levelData->GetComponent<LevelData>();
+		worldPtr = levelData->GetWorld();
+		currArea = &levelData->currArea;
+		currRoomX = &levelData->currRoomX;
+		currRoomY = &levelData->currRoomY;
+		roomWidth = &levelData->roomWidth;
+		roomHeight = &levelData->roomHeight;
+		tileWidth = &levelData->tileWidth;
+		tileHeight = &levelData->tileHeight;
 	}
 
 	void Create() override {
@@ -104,10 +110,13 @@ public:
 
 	void PlayerMovementCode() {
 		//facingX
-		int moveX = (-input->btnLeft.held + input->btnRight.held);
-		int moveY = (-input->btnUp.held + input->btnDown.held);
+		int moveX = 0;
+		int moveY = 0;
+		if (!input->btnR.held) {
+			moveX = (-input->btnLeft.held + input->btnRight.held);
+			moveY = (-input->btnUp.held + input->btnDown.held);
+		}
 		int tSize = 8;
-
 		if (moveX != 0) { // Are we facing right or left? (Right initially)
 			if (moveX > 0)
 				facingX = DIR_RIGHT;
@@ -146,7 +155,7 @@ public:
 			tsF = floor(((bboxLeft) + hsp) / tSize) - 1;
 			for (int tx = ts; !breakLoop && tx != tsF; tx--) {
 				for (int ty = start; ty != end; ty++) {
-			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
+			        int tileID = worldPtr->area[*currArea].room[(*currRoomX + 4) % 4][(*currRoomY + 5) % 5].tileData[(ty * *roomWidth) + tx].tileID;
 			        int tileType = tCollider->TileType(tileID);
 			    	if (tileType == TL_SOLID) {
 			    		float distance = bboxLeft - ((tx+1) * tSize);
@@ -163,7 +172,7 @@ public:
 			tsF = floor(((bboxRight + 1) + hsp) / tSize) + 1;
 			for (int tx = ts; !breakLoop && tx != tsF; tx++) {
 				for (int ty = start; ty != end; ty++) {
-			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
+			        int tileID = worldPtr->area[*currArea].room[(*currRoomX + 4) % 4][(*currRoomY + 5) % 5].tileData[(ty * *roomWidth) + tx].tileID;
 			        int tileType = tCollider->TileType(tileID);
 			    	if (tileType == TL_SOLID) {
 			    		float distance = ((tx) * tSize) - (bboxRight + 1);
@@ -180,9 +189,6 @@ public:
 			vsp = -jumpSpeed;
 			PHL_PlaySound(resources->sounds[SE03], 1);
 		}
-
-		if (vsp < grav_max)
-			vsp += grav * *deltaTime;
 
 		if (vsp >= 0)
 			facingY = DIR_DOWN;
@@ -201,7 +207,7 @@ public:
 		if (facingY == DIR_UP) {
 			for (int ty = ts; !breakLoop && ty != tsF; ty--) {
 				for (int tx = start; tx != end; tx++) {
-			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
+			        int tileID = worldPtr->area[*currArea].room[(*currRoomX + 4) % 4][(*currRoomY + 5) % 5].tileData[(ty * *roomWidth) + tx].tileID;
 			        int tileType = tCollider->TileType(tileID);
 			    	if (tileType == TL_SOLID) {
 			    		float distance = bboxTop - ((ty+1) * tSize);
@@ -222,7 +228,7 @@ public:
 			tsF = floor(((bboxBottom+1) + vsp) / tSize) + 1;
 			for (int ty = ts; !breakLoop && ty != tsF; ty++) {
 				for (int tx = start; tx != end; tx++) {
-			        int tileID = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(ty * roomWidth) + tx].tileID;
+			        int tileID = worldPtr->area[*currArea].room[(*currRoomX + 4) % 4][(*currRoomY + 5) % 5].tileData[(ty * *roomWidth) + tx].tileID;
 			        int tileType = tCollider->TileType(tileID);
 			    	if (tileType == TL_SOLID) {
 			    		float distance = ((ty) * tSize) - (bboxBottom+1);
@@ -237,6 +243,8 @@ public:
 			    }
 			}
 		}
+		if (vsp < grav_max)
+			vsp += grav * *deltaTime;
 
 		//printf("%f, %f          \n\033[0;0H",hsp,vsp);
 

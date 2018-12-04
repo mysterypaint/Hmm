@@ -23,6 +23,10 @@ public:
 	int currArea = MAP03;		// The actual game's currently loaded map (Aka "FIELD" in the XML data)
 	int currRoomX = 0;			// The actual game's current room X coordinate
 	int currRoomY = 1;			// The actual game's current room Y coordinate
+	int roomWidth = 32;
+	int roomHeight = 22;
+	int tileWidth = 8;
+	int tileHeight = 8;
 	std::map<std::string, XMLControlCommands> s_controlCommandArray;
 	List animatedTilesList;
 

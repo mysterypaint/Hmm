@@ -8,20 +8,29 @@ class TileColliderComponent : public Component {
 private:
 	World* worldPtr;
 	TransformComponent* transform;
-	int currArea = MAP01;
-	int currRoomX = 3;
-	int currRoomY = 1;
-	int roomWidth = 0, roomHeight = 0, tileWidth = 0, tileHeight = 0;
-	int screenOffsetX = 0, screenOffsetY = 0;
-
+	int* currArea;
+	int* currRoomX;
+	int* currRoomY;
+	int* roomWidth;
+	int* roomHeight;
+	int* tileWidth;
+	int* tileHeight;
 	ResourceComponent *resources;
 public:
 	PHL_Rect collider;
 	int t;
 
-	TileColliderComponent(int _t, World* _worldPtr) {
+	TileColliderComponent(int _t, Entity* _levelData) {
 		t = _t;
-		worldPtr = _worldPtr;
+		LevelData* levelData = &_levelData->GetComponent<LevelData>();
+		worldPtr = levelData->GetWorld();
+		currArea = &levelData->currArea;
+		currRoomX = &levelData->currRoomX;
+		currRoomY = &levelData->currRoomY;
+		roomWidth = &levelData->roomWidth;
+		roomHeight = &levelData->roomHeight;
+		tileWidth = &levelData->tileWidth;
+		tileHeight = &levelData->tileHeight;
 	}
 
 	void Create() override {
@@ -32,29 +41,22 @@ public:
 		}*/
 		transform = &entity->GetComponent<TransformComponent>();
 		resources = &entity->GetComponent<ResourceComponent>();
-		//worldPtr = entity->GetComponent<ResourceComponent>().GetWorld();
-		roomWidth = resources->roomWidth;
-		roomHeight = resources->roomHeight;
-		tileWidth = resources->tileWidth;
-		tileHeight = resources->tileHeight;
-		screenOffsetX = resources->screenOffsetX;
-		screenOffsetY = resources->screenOffsetY;
 	}
 
 	void Step() override {
 	}
 
 	int GetTile(float _x, float _y) {
-		int _tx = (int) floor(fmod((_x / tileWidth)+roomWidth, roomWidth));
-		int _ty = (int) floor(fmod((_y / tileHeight)+roomHeight, roomHeight));
-		int _thisTile = worldPtr->area[currArea].room[(currRoomX + 4) % 4][(currRoomY + 5) % 5].tileData[(_ty * roomWidth) + _tx].tileID;
+		int _tx = (int) floor(fmod((_x / *tileWidth)+ *roomWidth, *roomWidth));
+		int _ty = (int) floor(fmod((_y / *tileHeight)+ *roomHeight, *roomHeight));
+		int _thisTile = worldPtr->area[*currArea].room[(*currRoomX + 4) % 4][(*currRoomY + 5) % 5].tileData[(_ty * *roomWidth) + _tx].tileID;
 		return _thisTile;
 	}
 
 	int TileType(int _tileID) {
 		int _x = _tileID % 40;
 		int _y = _tileID / 40;
-		int _val = worldPtr->collisionMap[currArea].tile[_x][_y];
+		int _val = worldPtr->collisionMap[*currArea].tile[_x][_y];
 		return _val;
 	}
 
