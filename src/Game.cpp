@@ -26,6 +26,24 @@ int screenShakeTimer = 0;
 bool gamePaused = false;
 bool loopBGM = true;
 InputListener* input;
+
+// Get the current room coordinates we're playing in
+Area* currLoadedArea;
+Room* currLoadedRoom;
+Area* nextLoadedArea;
+Room* nextLoadedRoom;
+float* screenOffsetX;
+float* screenOffsetY;
+int nextRoomOffsetX = 0;
+int nextRoomOffsetY = 0;
+int texID = sprMapG03;
+int currRoomX, currRoomY;
+int moveRoom = DIR_NONE;
+float* camX;
+float* camY;
+float* playerX;
+float* playerY;
+
 PHL_Music currBGM[1];					// Keeps the current song stream in the memory
 PHL_Sound sounds[SE_MAX];			// Creates an array that stores every sound in the game
 
@@ -33,7 +51,6 @@ PHL_Background background, foreground;
 PHL_Surface textures[T_MAX] = {0};
 
 int language = ENG;
-int texID = sprMapG03;
 const float _tAniSpdMult = 4.0f; // Tile Animation Speed Multiplier
 
 Game::Game(void) {
@@ -44,7 +61,7 @@ Game::~Game(void) {
 }
 
 void Game::Startup(void) {
-	if (_gameState != INIT)
+	if (gameState != INIT)
 		return;
 
 	//Setup
@@ -52,7 +69,6 @@ void Game::Startup(void) {
 	//assets->AddTexture(T_PROTAG, sprProt1);
 
 	textures[T_PROTAG] = PHL_LoadTexture(sprProt1);
-	textures[T_ATEX] = PHL_LoadTexture(texID);
 
 	PHL_FreeMusic(currBGM[0]);
 	currBGM[0] = PHL_LoadMusic("m04", loopBGM);
@@ -80,18 +96,25 @@ void Game::Startup(void) {
 
 	camera.AddComponent<InputController>();
 	camera.AddComponent<CameraComponent>();
+	camX = &camera.GetComponent<CameraComponent>().x;
+	camY = &camera.GetComponent<CameraComponent>().y;
+	screenOffsetX = &camera.GetComponent<CameraComponent>().screenOffsetX;
+	screenOffsetY = &camera.GetComponent<CameraComponent>().screenOffsetY;
+	nextRoomOffsetX = floor(256 + *camX);
+	nextRoomOffsetY = floor(0 + *camY);
 
 	levelData.AddComponent<LevelData>(language);
 	player.AddComponent<InputController>();
 	player.AddComponent<ResourceComponent>(&textures[0], T_MAX, &sounds[0], SE_MAX, &currBGM[0], 1);
 	player.AddComponent<TimeComponent>(&tick, &deltaTime, &gamePaused);
-	player.AddComponent<TransformComponent>(116, 0);
+	player.AddComponent<TransformComponent>(116, 20);
 	player.AddComponent<SpriteComponent>(&textures[T_PROTAG], &camera);
 	player.AddComponent<EntityColliderComponent>(objPlayer);
 	player.AddComponent<TileColliderComponent>(objPlayer, &levelData);
 	player.AddComponent<PlayerComponent>(&levelData);
 	player.AddComponent<PlayerDebugComponent>();
-
+	playerX = &player.GetComponent<TransformComponent>().position.x;
+	playerY = &player.GetComponent<TransformComponent>().position.y;
 	//wall.AddComponent<TransformComponent>(370.0f, 377.0f, 8, 8, 1);
 	//wall.AddComponent<SpriteComponent>(textures[T_PROTAG]);
 	//wall.AddComponent<ColliderComponent>("wall");
@@ -107,7 +130,7 @@ int Game::GetMainLoop() {
 }
 
 bool Game::IsExiting() {
-	if(_gameState == Game::EXITING) 
+	if(gameState == Game::EXITING) 
 		return true;
 	else 
 		return false;
@@ -126,15 +149,64 @@ void Game::Step() {
 	}
 	*/
 
-	switch(_gameState) {
+	switch(gameState) {
 		case Game::INIT:
-			_gameState = Game::GAMEPLAY;
+			currRoomX = levelData.GetComponent<LevelData>().currRoomX;
+			currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+			currLoadedArea = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea];
+			currLoadedRoom = &currLoadedArea->room[currRoomX % 4][(currRoomY + 5) % 5];
+			nextLoadedArea = currLoadedArea;
+			nextLoadedRoom = currLoadedRoom;
+			texID = levelData.GetComponent<LevelData>().world.texID[levelData.GetComponent<LevelData>().currArea];
+			textures[T_ATEX] = PHL_LoadTexture(texID);
+			textures[T_NATEX] = PHL_LoadTexture(texID);
+			gameState = Game::GAMEPLAY;
 			break;
 		case Game::GAMEPLAY:
+			GameplayStep();
+			break;
+		case Game::ROOMSWITCHING:
+			if (camera.GetComponent<CameraComponent>().dir == DIR_NONE) {
+				deltaTime = 1.0f;
+				gameState = GAMEPLAY;
+				currLoadedArea = nextLoadedArea;
+				currLoadedRoom = nextLoadedRoom;
+
+				PHL_FreeSurface(textures[T_ATEX]);
+				texID = levelData.GetComponent<LevelData>().world.texID[levelData.GetComponent<LevelData>().currArea];
+				textures[T_ATEX] = PHL_LoadTexture(texID);
+				textures[T_NATEX] = PHL_LoadTexture(texID);
+				nextLoadedRoom = &levelData.GetComponent<LevelData>().world.blankRoom;
+
+				// Correct the player's position in the middle room
+				switch(moveRoom) {
+					default:
+						break;
+					case DIR_LEFT:
+						*playerX = 254 - player.GetComponent<SpriteComponent>().sTex.originX;
+						break;
+					case DIR_RIGHT:
+						*playerX = 1 + player.GetComponent<SpriteComponent>().sTex.originX;
+						break;
+					case DIR_UP:
+						*playerY = 190 - player.GetComponent<SpriteComponent>().sTex.originY;
+						break;
+					case DIR_DOWN:
+						*playerY = 0 + player.GetComponent<SpriteComponent>().sTex.originY;
+						break;
+				}
+
+				// Snap the camera back to the center room after everything has been moved
+				camera.GetComponent<CameraComponent>().x = 0;
+				camera.GetComponent<CameraComponent>().xTo = 0;
+				camera.GetComponent<CameraComponent>().y = 0;
+				camera.GetComponent<CameraComponent>().yTo = 0;
+			}
 			break;
 		default:
 			break;
 	}
+
 
 	if (GetMainLoop() == 0) {
 		// The game is ending; Free all game resources
@@ -150,11 +222,7 @@ void Game::Step() {
 	tick++;
 }
 
-void Game::Draw() {
-	PHL_StartDrawing();
-	PHL_DrawBackground(background, foreground);
-
-
+void Game::GameplayStep() {
 
 /*
 	printf("                      \033[0;0H");
@@ -167,24 +235,19 @@ void Game::Draw() {
 
 */
 
-	// Get the current room coordinates we're playing in
-
-	int currRoomX = levelData.GetComponent<LevelData>().currRoomX;
-	int currRoomY = levelData.GetComponent<LevelData>().currRoomY;
-
 	// Find the current room, given the room coordinates
 	Room* currRoom = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea].room[currRoomX % 4][currRoomY % 5];
 
 	// Switch room data based on the cardinal directions we've pressed (debug)
-	int moveRoom = DIR_NONE;
+	moveRoom = DIR_NONE;
 
 	input = &player.GetComponent<InputController>().input;
 	if (input->btnL.held) {
 		if (input->btnFaceRight.pressed) {
 			levelData.GetComponent<LevelData>().LoadMap(1, textures[T_ATEX]);
-			PHL_FreeSurface(textures[T_ATEX]);
+			PHL_FreeSurface(textures[T_NATEX]);
 			texID = levelData.GetComponent<LevelData>().world.texID[levelData.GetComponent<LevelData>().currArea];
-			textures[T_ATEX] = PHL_LoadTexture(texID);
+			textures[T_NATEX] = PHL_LoadTexture(texID);
 
 			switch(levelData.GetComponent<LevelData>().currArea) {
 				case MAP00:
@@ -200,9 +263,9 @@ void Game::Draw() {
 			}
 		} else if (input->btnFaceDown.pressed) {
 			levelData.GetComponent<LevelData>().LoadMap(-1, textures[T_ATEX]);
-			PHL_FreeSurface(textures[T_ATEX]);
+			PHL_FreeSurface(textures[T_NATEX]);
 			texID = levelData.GetComponent<LevelData>().world.texID[levelData.GetComponent<LevelData>().currArea];
-			textures[T_ATEX] = PHL_LoadTexture(texID);
+			textures[T_NATEX] = PHL_LoadTexture(texID);
 			switch(levelData.GetComponent<LevelData>().currArea) {
 				case MAP00:
 					PHL_FreeMusic(currBGM[0]);
@@ -227,15 +290,13 @@ void Game::Draw() {
 			moveRoom = DIR_DOWN;
 	}
 
-	float* playerX = &player.GetComponent<TransformComponent>().position.x;
-	float* playerY = &player.GetComponent<TransformComponent>().position.y;
 	float* playerBBoxLeft = &player.GetComponent<PlayerComponent>().bboxLeft;
 	float* playerBBoxRight = &player.GetComponent<PlayerComponent>().bboxRight;
 	float* playerBBoxTop = &player.GetComponent<PlayerComponent>().bboxTop;
 	float* playerBBoxBottom = &player.GetComponent<PlayerComponent>().bboxBottom;
 	int* pFacingX = &player.GetComponent<PlayerComponent>().facingX;
 	float* pVsp = &player.GetComponent<PlayerComponent>().vsp;
-	printf("%f\033[0;0H", *pVsp);
+
 	if (*playerBBoxRight >= 254 && *pFacingX == DIR_RIGHT) {
 		moveRoom = DIR_RIGHT;
 	} else if (*playerBBoxLeft <= 2 && *pFacingX == DIR_LEFT) {
@@ -258,10 +319,18 @@ void Game::Draw() {
 				levelData.GetComponent<LevelData>().currRoomY = currRoom->mapLeft.y;
 				currRoomX = levelData.GetComponent<LevelData>().currRoomX;
 				currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+				nextLoadedArea = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea];
+				nextLoadedRoom = &nextLoadedArea->room[currRoomX % 4][(currRoomY + 5) % 5];
+				nextRoomOffsetX = -256;
+				nextRoomOffsetY = 0;
+				camera.GetComponent<CameraComponent>().dir = DIR_LEFT;
+				camera.GetComponent<CameraComponent>().xTo = 256;
+				camera.GetComponent<CameraComponent>().yTo = 0;
 				UpdateMapGraphics();
 				UpdateMapBGM();
-				*playerX = 253;
 			}
+			deltaTime = 0;
+			gameState = ROOMSWITCHING;
 			break;
 		case DIR_RIGHT: // Right
 			if (currRoom->mapRight.x >= 0 && currRoom->mapRight.y >= 0) {
@@ -272,10 +341,18 @@ void Game::Draw() {
 				levelData.GetComponent<LevelData>().currRoomY = currRoom->mapRight.y;
 				currRoomX = levelData.GetComponent<LevelData>().currRoomX;
 				currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+				nextLoadedArea = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea];
+				nextLoadedRoom = &nextLoadedArea->room[currRoomX % 4][(currRoomY + 5) % 5];
+				nextRoomOffsetX = 256;
+				nextRoomOffsetY = 0;
+				camera.GetComponent<CameraComponent>().dir = DIR_RIGHT;
+				camera.GetComponent<CameraComponent>().xTo = -256;
+				camera.GetComponent<CameraComponent>().yTo = 0;
 				UpdateMapGraphics();
 				UpdateMapBGM();
-				*playerX = 3;
 			}
+			deltaTime = 0;
+			gameState = ROOMSWITCHING;
 			break;
 		case DIR_UP: // Up
 			if (currRoom->mapUp.x >= 0 && currRoom->mapUp.y >= 0) {
@@ -286,10 +363,18 @@ void Game::Draw() {
 				levelData.GetComponent<LevelData>().currRoomY = currRoom->mapUp.y;
 				currRoomX = levelData.GetComponent<LevelData>().currRoomX;
 				currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+				nextLoadedArea = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea];
+				nextLoadedRoom = &nextLoadedArea->room[currRoomX % 4][(currRoomY + 5) % 5];
+				nextRoomOffsetX = 0;
+				nextRoomOffsetY = -176;
+				camera.GetComponent<CameraComponent>().dir = DIR_UP;
+				camera.GetComponent<CameraComponent>().xTo = 0;
+				camera.GetComponent<CameraComponent>().yTo = 176;
 				UpdateMapGraphics();
 				UpdateMapBGM();
-				*playerY = 187;
 			}
+			deltaTime = 0;
+			gameState = ROOMSWITCHING;
 			break;
 		case DIR_DOWN: // Down
 			if (currRoom->mapDown.x >= 0 && currRoom->mapDown.y >= 0) {
@@ -300,29 +385,43 @@ void Game::Draw() {
 				levelData.GetComponent<LevelData>().currRoomY = currRoom->mapDown.y;
 				currRoomX = levelData.GetComponent<LevelData>().currRoomX;
 				currRoomY = levelData.GetComponent<LevelData>().currRoomY;
+				nextLoadedArea = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea];
+				nextLoadedRoom = &nextLoadedArea->room[currRoomX % 4][(currRoomY + 5) % 5];
+				nextRoomOffsetX = 0;
+				nextRoomOffsetY = 176;
+				camera.GetComponent<CameraComponent>().dir = DIR_DOWN;
+				camera.GetComponent<CameraComponent>().xTo = 0;
+				camera.GetComponent<CameraComponent>().yTo = -176;
 				UpdateMapGraphics();
 				UpdateMapBGM();
-				*playerY = 3;
 			}
+			deltaTime = 0;
+			gameState = ROOMSWITCHING;
 			break;
 	}
+}
+void Game::Draw() {
+	PHL_StartDrawing();
+	PHL_DrawBackground(background, foreground);
 
-	Area* _thisArea = &levelData.GetComponent<LevelData>().world.area[levelData.GetComponent<LevelData>().currArea];
-	Room* _thisRoom = &_thisArea->room[currRoomX % 4][(currRoomY + 5) % 5];
+
+	//currLoadedArea = nextLoadedArea;
+	//currLoadedRoom = nextLoadedRoom;
+
 /*
-	int roomID = _thisRoom->roomGroupID;
-	int l1 = _thisRoom->mapLeft.area;
-	int l2 = _thisRoom->mapLeft.x;
-	int l3 = _thisRoom->mapLeft.y;
-	int r1 = _thisRoom->mapRight.area;
-	int r2 = _thisRoom->mapRight.x;
-	int r3 = _thisRoom->mapRight.y;
-	int u1 = _thisRoom->mapUp.area;
-	int u2 = _thisRoom->mapUp.x;
-	int u3 = _thisRoom->mapUp.y;
-	int d1 = _thisRoom->mapDown.area;
-	int d2 = _thisRoom->mapDown.x;
-	int d3 = _thisRoom->mapDown.y;
+	int roomID = currLoadedRoom->roomGroupID;
+	int l1 = currLoadedRoom->mapLeft.area;
+	int l2 = currLoadedRoom->mapLeft.x;
+	int l3 = currLoadedRoom->mapLeft.y;
+	int r1 = currLoadedRoom->mapRight.area;
+	int r2 = currLoadedRoom->mapRight.x;
+	int r3 = currLoadedRoom->mapRight.y;
+	int u1 = currLoadedRoom->mapUp.area;
+	int u2 = currLoadedRoom->mapUp.x;
+	int u3 = currLoadedRoom->mapUp.y;
+	int d1 = currLoadedRoom->mapDown.area;
+	int d2 = currLoadedRoom->mapDown.x;
+	int d3 = currLoadedRoom->mapDown.y;
 
 	printf("\nRoom: (%d, %d)\nRoom Group ID: %d                     \ntexID: %d                     \nUp %d,%d,%d   \nRight %d,%d,%d   \nDown %d,%d,%d   \nLeft: %d,%d,%d   \nUDLR - Move around the map\nA - Go forward a map\nB - Go back a map\033[0;0H", currRoomX % 4, currRoomY % 5, roomID, texID - 4, u1,u2,u3, r1,r2,r3, d1,d2,d3, l1,l2,l3);
 */
@@ -337,12 +436,15 @@ void Game::Draw() {
 		}
 	}
 */
-	
-	float _camX = camera.GetComponent<CameraComponent>().x;
-	float _camY = camera.GetComponent<CameraComponent>().y;
-	int drawXOffset = floor(0 + _camX);
-	int drawYOffset = floor(0 + _camY);
 
+	DrawRoom(currLoadedArea, currLoadedRoom, T_ATEX, floor(0 + *camX), floor(0 + *camY));
+	DrawRoom(nextLoadedArea, nextLoadedRoom, T_NATEX, floor(nextRoomOffsetX + *camX), floor(nextRoomOffsetY + *camY));
+
+	manager.Draw();
+	PHL_EndDrawing();
+}
+
+void Game::DrawRoom(Area* _thisArea, Room* _thisRoom, int _texID, int _drawXOffset, int _drawYOffset) {
 	// Loop through every single Room[_x][_y] tile to draw every single tile in a given room
 	for (int _y = 0; _y < 22; _y++) { 
 		for (int _x = 0; _x < 32; _x++) {
@@ -358,7 +460,7 @@ void Game::Draw() {
 				int _aniMax = _thisArea->tileAnimationList[_thisTile->tileID-1160].aniTiles.size() + 1;
 
 				// Increment the animation frame if we've waited long enough
-				if (tick % (int)(_aniWait * _tAniSpdMult) == 0) // Increment the animation frame every <wait> * <tile animation speed multiplier> ticks
+				if ((tick % (int)(_aniWait * _tAniSpdMult) == 0) && gameState != ROOMSWITCHING) // Increment the animation frame every <wait> * <tile animation speed multiplier> ticks
 					_thisTile->aniIndex++;
 				
 				// Ensure that the current tile never goes over the maximum animation value
@@ -368,23 +470,21 @@ void Game::Draw() {
 				vector<int>* _aniTiles = &_thisArea->tileAnimationList[_thisTile->tileID-1160].aniTiles; // Get the current tile's tile animation list
 
 				if (_thisAniIndex < 1) {
-					PHL_DrawSurfacePart((_x * 8) + drawXOffset, (_y * 8) + drawYOffset, (_thisTileIndex % 40) * 8, (_thisTileIndex/40) * 8, 8, 8, textures[T_ATEX]); // Draw the first frame normally
+					PHL_DrawSurfacePart((_x * 8) + _drawXOffset + *screenOffsetX, (_y * 8) + _drawYOffset + *screenOffsetY, (_thisTileIndex % 40) * 8, (_thisTileIndex/40) * 8, 8, 8, textures[_texID]); // Draw the first frame normally
 				} else {
-					PHL_DrawSurfacePart((_x * 8) + drawXOffset, (_y * 8) + drawYOffset, (_aniTiles->at(_thisAniIndex - 1) % 40) * 8, (_aniTiles->at(_thisAniIndex - 1)/40) * 8, 8, 8, textures[T_ATEX]); // For all the other frames, load the index dynamically
+					PHL_DrawSurfacePart((_x * 8) + _drawXOffset + *screenOffsetX, (_y * 8) + _drawYOffset + *screenOffsetY, (_aniTiles->at(_thisAniIndex - 1) % 40) * 8, (_aniTiles->at(_thisAniIndex - 1)/40) * 8, 8, 8, textures[_texID]); // For all the other frames, load the index dynamically
 				}
 			} else {
-				PHL_DrawSurfacePart((_x * 8) + drawXOffset, (_y * 8) + drawYOffset, (_thisTileIndex % 40) * 8, (_thisTileIndex/40) * 8, 8, 8, textures[T_ATEX]);
+				PHL_DrawSurfacePart((_x * 8) + _drawXOffset + *screenOffsetX, (_y * 8) + _drawYOffset + *screenOffsetY, (_thisTileIndex % 40) * 8, (_thisTileIndex/40) * 8, 8, 8, textures[_texID]);
 			}
 		}
 	}
-	manager.Draw();
-	PHL_EndDrawing();
 }
 
 void Game::UpdateMapGraphics() {
-	PHL_FreeSurface(textures[T_ATEX]);
+	PHL_FreeSurface(textures[T_NATEX]);
 	texID = levelData.GetComponent<LevelData>().world.texID[levelData.GetComponent<LevelData>().currArea];
-	textures[T_ATEX] = PHL_LoadTexture(texID);
+	textures[T_NATEX] = PHL_LoadTexture(texID);
 }
 
 void Game::UpdateMapBGM() {
@@ -394,4 +494,4 @@ void Game::UpdateMapBGM() {
 
 
 
-Game::GameState Game::_gameState = INIT;
+Game::GameState Game::gameState = INIT;

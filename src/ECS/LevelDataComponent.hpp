@@ -52,6 +52,7 @@ public:
 
 	void Create() override {
 		InitLevelData();
+		InitBlankRoom();
 		ParseXMLData(language);	// Based on the global game's language (EN, JP) we'll grab the dialogue/map data respective to that language
 		DefineTileGFXArrays();
 	}
@@ -63,6 +64,12 @@ public:
 	void Draw() override {
 		
 	}
+
+	void InitBlankRoom() {
+		for (int _i = 0; _i < 704; _i++) {
+			world.blankRoom.tileData[_i].tileID = 0;
+		}
+	};
 
 	World* GetWorld() {
 		return &world;

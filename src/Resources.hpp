@@ -74,6 +74,7 @@ typedef struct {
 // Define a world of areas, which have rooms in them. We will create <num of maps> areas, and have a parallel array of textures to refer to for each map (so we load the correct graphics for the map data)
 typedef struct {
 	Area area[MAP_MAX];
+	Room blankRoom; // The room to use whenever a room is unloaded or undefined
 	int texID[MAP_MAX];
 	int collisionID[MAP_MAX];
 	CollisionMap collisionMap[22];
@@ -85,7 +86,7 @@ enum XMLControlCommands {CC_NULL, CC_TALK, CC_FIELD, CC_WORLD, CC_CHIPLINE, CC_H
 
 enum Direction {DIR_NONE, DIR_UP, DIR_LEFT, DIR_RIGHT, DIR_DOWN, DIR_MAX};
 
-enum TexGroups {T_BOSS, T_EVENT, T_GENEMIES1, T_GENEMIES2, T_AENEMIES, T_ATEX, T_FONT, T_ITEM, T_PROTAG, T_STDEMO1, T_MAX};
+enum TexGroups {T_BOSS, T_EVENT, T_GENEMIES1, T_GENEMIES2, T_AENEMIES, T_ATEX, T_NATEX, T_FONT, T_ITEM, T_PROTAG, T_STDEMO1, T_MAX};
 
 enum GFX {sprTitle, sprProt1, sprPlayer, sprTile0,
 	sprMapG00, sprMapG01, sprMapG02, sprMapG03,

@@ -51,6 +51,6 @@ public:
 	}
 
 	void Draw() override {
-		PHL_DrawSurfacePart(srcRect.x - sTex.originX + camera->x, srcRect.y - sTex.originY + camera->y, sTex.cropX, sTex.cropY, sTex.w, sTex.h, *sTex.texGroup);
+		PHL_DrawSurfacePart(srcRect.x - sTex.originX + camera->x + camera->screenOffsetX, srcRect.y - sTex.originY + camera->y + camera->screenOffsetY, sTex.cropX, sTex.cropY, sTex.w, sTex.h, *sTex.texGroup);
 	}
 };
