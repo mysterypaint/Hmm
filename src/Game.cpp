@@ -71,8 +71,8 @@ void Game::Startup(void) {
 	textures[T_PROTAG] = PHL_LoadTexture(sprProt1);
 
 	PHL_FreeMusic(currBGM[0]);
-	currBGM[0] = PHL_LoadMusic("m04", loopBGM);
-	//currBGM[0] = PHL_LoadMusic(NULL, loopBGM);
+	//currBGM[0] = PHL_LoadMusic("m04", loopBGM);
+	currBGM[0] = PHL_LoadMusic(NULL, loopBGM);
 	sounds[SE00] = PHL_LoadSound("se00");
 	sounds[SE01] = PHL_LoadSound("se01");
 	sounds[SE02] = PHL_LoadSound("se02");
@@ -166,7 +166,9 @@ void Game::Step() {
 			GameplayStep();
 			break;
 		case Game::ROOMSWITCHING:
-			if (camera.GetComponent<CameraComponent>().dir == DIR_NONE) {
+			//if (camera.GetComponent<CameraComponent>().dir == DIR_NONE) {
+			if (camera.GetComponent<CameraComponent>().x == camera.GetComponent<CameraComponent>().xTo &&
+				camera.GetComponent<CameraComponent>().y == camera.GetComponent<CameraComponent>().yTo) {
 				deltaTime = 1.0f;
 				gameState = GAMEPLAY;
 				currLoadedArea = nextLoadedArea;
@@ -174,8 +176,8 @@ void Game::Step() {
 
 				PHL_FreeSurface(textures[T_ATEX]);
 				texID = levelData.GetComponent<LevelData>().world.texID[levelData.GetComponent<LevelData>().currArea];
+				//textures[T_ATEX] = textures[T_NATEX];
 				textures[T_ATEX] = PHL_LoadTexture(texID);
-				textures[T_NATEX] = PHL_LoadTexture(texID);
 				nextLoadedRoom = &levelData.GetComponent<LevelData>().world.blankRoom;
 
 				// Correct the player's position in the middle room
@@ -251,14 +253,18 @@ void Game::GameplayStep() {
 
 			switch(levelData.GetComponent<LevelData>().currArea) {
 				case MAP00:
+					/*
 					PHL_FreeMusic(currBGM[0]);
 					currBGM[0] = PHL_LoadMusic("m01", loopBGM);
 					PHL_PlayMusic(currBGM[0]);
+					*/
 					break;
 				case MAP01:
+					/*
 					PHL_FreeMusic(currBGM[0]);
 					currBGM[0] = PHL_LoadMusic("m00", loopBGM);
 					PHL_PlayMusic(currBGM[0]);
+					*/
 					break;
 			}
 		} else if (input->btnFaceDown.pressed) {
@@ -268,14 +274,18 @@ void Game::GameplayStep() {
 			textures[T_NATEX] = PHL_LoadTexture(texID);
 			switch(levelData.GetComponent<LevelData>().currArea) {
 				case MAP00:
+					/*
 					PHL_FreeMusic(currBGM[0]);
 					currBGM[0] = PHL_LoadMusic("m01", loopBGM);
 					PHL_PlayMusic(currBGM[0]);
+					*/
 					break;
 				case MAP01:
+					/*
 					PHL_FreeMusic(currBGM[0]);
 					currBGM[0] = PHL_LoadMusic("m00", loopBGM);
 					PHL_PlayMusic(currBGM[0]);
+					*/
 					break;
 			}
 		}

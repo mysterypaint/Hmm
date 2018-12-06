@@ -1,0 +1,18 @@
+-fix vertical scrolling memory leak (maybe drawing out of bounds..?)
+-reposition player while the camera is "zelda" scrolling
+
+-define all world tiles
+-implement alternate transition entering a door/ladder
+
+-font system, load and write dialogue to the game
+
+-rewrite player physics
+-slopes
+-ladder physics
+
+
+
+- load and playback instruments into memory from the .it
+- midi engine
+- parse midis
+- convert the original .sgts to .mids with pre-defined song loop data
